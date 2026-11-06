@@ -13,7 +13,7 @@ function bsl_settings_defaults() {
 		'serper_key' => '',
 		'generator'  => array(
 			'system_prompt'        => '',
-			'web_research_enabled' => 1,
+			'web_research_enabled' => 0,
 			'web_research_results' => 5,
 			'max_dynamic_labels'   => 6,
 			'popular_window_days'  => 30,

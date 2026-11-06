@@ -38,7 +38,7 @@ function bsl_legacy_deactivate() {
 /** True when an old plugin's code is loaded in this request, so its module must not load. */
 function bsl_legacy_loaded( $id ) {
 	$plugins = bsl_legacy_plugins();
-	return isset( $plugins[ $id ] ) && defined( $plugins[ $id ]['constant'] );
+	return isset( $plugins[ $id ] ) && defined( $plugins[ $id ]['constant'] ) && ! in_array( $id, $GLOBALS['bsl_loaded_modules'] ?? array(), true );
 }
 
 // An old plugin activated again while the suite is active: turn it off on the next admin page.

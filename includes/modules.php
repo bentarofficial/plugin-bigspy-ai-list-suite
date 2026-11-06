@@ -52,6 +52,7 @@ add_action( 'plugins_loaded', function () {
 		$file = BSL_DIR . 'modules/' . $id . '/module.php';
 		if ( bsl_module_enabled( $id ) && ! bsl_legacy_loaded( $id ) && is_readable( $file ) ) {
 			require_once $file;
+			$GLOBALS['bsl_loaded_modules'][] = $id;
 		}
 	}
 	do_action( 'bsl_modules_loaded' );
