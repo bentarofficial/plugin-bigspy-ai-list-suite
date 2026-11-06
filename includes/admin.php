@@ -87,6 +87,8 @@ function bsl_settings_page() {
 				</tr>
 			</table>
 			<?php do_action( 'bsl_settings_sections', $s ); ?>
+			<h2><?php esc_html_e( 'Data', 'bigspy-ai-list-suite' ); ?></h2>
+			<p><label><input type="checkbox" name="bsl[delete_data]" value="1" <?php checked( ! empty( $s['delete_data'] ) ); ?>> <?php esc_html_e( 'Delete all suite data when the plugin is deleted (website insights, click statistics, settings). Listings and posts are never deleted.', 'bigspy-ai-list-suite' ); ?></label></p>
 			<?php submit_button(); ?>
 		</form>
 	</div>
@@ -115,6 +117,7 @@ add_action( 'admin_post_bsl_save_settings', function () {
 			$s[ $key ] = $value;
 		}
 	}
+	$s['delete_data'] = empty( $in['delete_data'] ) ? 0 : 1;
 	$s = apply_filters( 'bsl_sanitize_settings', $s, $in, $old );
 	bsl_update_settings( $s );
 

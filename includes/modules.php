@@ -7,7 +7,7 @@ function bsl_module_ids() {
 	return array(
 		'generator' => array( 'bigspy_popular_daily_maintenance' ),
 		'writer'    => array(),
-		'insights'  => array( 'bsi_refresh', 'bsi_monitor', 'bsi_daily', 'bsi_queue_all' ),
+		'insights'  => array( 'bsi_refresh', 'bsi_monitor', 'bsi_daily', 'bsi_queue_all', 'bsi_resolve_post' ),
 	);
 }
 

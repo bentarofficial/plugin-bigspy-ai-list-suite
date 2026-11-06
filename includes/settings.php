@@ -11,6 +11,8 @@ function bsl_settings_defaults() {
 		'api_url'    => 'https://kymaapi.com/v1/chat/completions',
 		'api_key'    => '',
 		'serper_key' => '',
+		// Delete tables, listing data and settings when the plugin is deleted.
+		'delete_data' => 0,
 		'generator'  => array(
 			'system_prompt'        => '',
 			'web_research_enabled' => 0,
