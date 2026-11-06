@@ -28,6 +28,7 @@ require_once BSL_DIR . 'includes/migrate.php';
 require_once BSL_DIR . 'includes/modules.php';
 require_once BSL_DIR . 'includes/updater.php';
 require_once BSL_DIR . 'includes/links.php';
+require_once BSL_DIR . 'includes/ai-tools.php';
 if ( is_admin() ) {
 	require_once BSL_DIR . 'includes/admin.php';
 }
