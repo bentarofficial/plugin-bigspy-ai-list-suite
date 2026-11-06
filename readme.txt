@@ -2,7 +2,7 @@
 Contributors: bentar
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 0.1.0
+Stable tag: 1.0.0
 License: GPL-2.0-or-later
 
 AI listing generator, post writer and site insights for directory websites.
@@ -17,8 +17,9 @@ Updates come from GitHub Releases in the WordPress dashboard.
 
 == Changelog ==
 
-= 0.1.0 =
-* Plugin frame: settings page, module switches, settings migration, replaces the old plugins, GitHub updates. Modules follow.
+= 1.0.0 =
+* First release. Replaces BIGSPY AI LIST Generator 2.9.9, BIGSPY AI Post Writer 1.2.4 and BigSpy Site Insights 0.3.0, keeping their data.
+* One settings page with module switches; old settings are copied and the old plugins turned off; updates from GitHub in the dashboard.
 * Listing Generator module (from BIGSPY AI LIST Generator 2.9.9): settings on the suite page, new "Create listing" page, shared AI key, prompt uses the site name.
 * Post Writer module (from BIGSPY AI Post Writer 1.2.4): new "Write post" page, image SEO fields in the media library, prompt uses the site name.
 * Site Insights module (from BigSpy Site Insights 0.3.0): settings on the suite page, keys never printed, Site Insights block (locked while the theme List mode is off), data kept on uninstall unless chosen.
