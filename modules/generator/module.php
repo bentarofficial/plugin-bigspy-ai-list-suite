@@ -5,9 +5,9 @@ defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/generator.php';
 bigspy_popular_maybe_install();
 
-/** True on the suite's Create Listing screen. */
+/** True on the suite's Create listing or Write post screen, which use the internal link history. */
 function bsl_is_create_page( $hook ) {
-	return 'admin_page_bsl-create-listing' === $hook || ( is_string( $hook ) && '_page_bsl-create-listing' === substr( $hook, -24 ) );
+	return is_string( $hook ) && (bool) preg_match( '/_page_bsl-(create-listing|write-post)$/', $hook );
 }
 
 add_action( 'admin_menu', function () {

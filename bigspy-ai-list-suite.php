@@ -19,6 +19,7 @@ define( 'BSL_VERSION', '0.1.0' );
 define( 'BSL_FILE', __FILE__ );
 define( 'BSL_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BSL_URL', plugin_dir_url( __FILE__ ) );
+define( 'BSL_PAGE', 'bigspy-ai-list-suite' );
 
 require_once BSL_DIR . 'includes/settings.php';
 require_once BSL_DIR . 'includes/connection.php';

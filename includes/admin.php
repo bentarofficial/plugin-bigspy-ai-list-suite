@@ -2,7 +2,6 @@
 /** Settings page: modules, AI connection, web research key. */
 defined( 'ABSPATH' ) || exit;
 
-const BSL_PAGE = 'bigspy-ai-list-suite';
 
 add_action( 'admin_menu', function () {
 	add_menu_page(

@@ -20,3 +20,4 @@ Updates come from GitHub Releases in the WordPress dashboard.
 = 0.1.0 =
 * Plugin frame: settings page, module switches, settings migration, replaces the old plugins, GitHub updates. Modules follow.
 * Listing Generator module (from BIGSPY AI LIST Generator 2.9.9): settings on the suite page, new "Create listing" page, shared AI key, prompt uses the site name.
+* Post Writer module (from BIGSPY AI Post Writer 1.2.4): new "Write post" page, image SEO fields in the media library, prompt uses the site name.
