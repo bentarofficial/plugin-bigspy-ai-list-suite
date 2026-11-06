@@ -206,7 +206,7 @@ PROMPT;
  * the current catalog instead of silently sending a different model.
  */
 function bigspy_models() {
-    return [
+    return apply_filters('bigspy_models', [
         'gemini-2.5-flash' => [
             'label' => 'Gemini 2.5 Flash',
             'verified' => true,
@@ -247,7 +247,7 @@ function bigspy_models() {
             'label' => 'Qwen 3.6 Plus',
             'verified' => true,
         ],
-    ];
+    ]);
 }
 
 function bigspy_get_url() {

@@ -37,6 +37,7 @@ function bsl_settings_page() {
 		<?php if ( ! class_exists( 'WooCommerce' ) ) : ?>
 			<div class="notice notice-warning"><p><?php esc_html_e( 'Listings are WooCommerce products. Install and activate WooCommerce to use the Listing Generator.', 'bigspy-ai-list-suite' ); ?></p></div>
 		<?php endif; ?>
+		<?php do_action( 'bsl_settings_top' ); ?>
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<input type="hidden" name="action" value="bsl_save_settings">
 			<?php wp_nonce_field( 'bsl_save_settings' ); ?>

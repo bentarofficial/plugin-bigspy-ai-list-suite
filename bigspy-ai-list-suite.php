@@ -27,6 +27,7 @@ require_once BSL_DIR . 'includes/legacy.php';
 require_once BSL_DIR . 'includes/migrate.php';
 require_once BSL_DIR . 'includes/modules.php';
 require_once BSL_DIR . 'includes/updater.php';
+require_once BSL_DIR . 'includes/links.php';
 if ( is_admin() ) {
 	require_once BSL_DIR . 'includes/admin.php';
 }

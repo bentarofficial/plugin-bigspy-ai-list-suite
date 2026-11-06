@@ -62,6 +62,17 @@ add_action( 'bsl_settings_sections', function ( $s ) {
 			<th scope="row"><?php esc_html_e( 'Test connection', 'bigspy-ai-list-suite' ); ?></th>
 			<td><button type="button" class="button" id="bsl-test-api"><?php esc_html_e( 'Send a test request', 'bigspy-ai-list-suite' ); ?></button> <span id="bsl-test-result" aria-live="polite"></span></td>
 		</tr>
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Models', 'bigspy-ai-list-suite' ); ?></th>
+			<td><details><summary><?php echo esc_html( sprintf( /* translators: %d: number of models. */ _n( '%d model available', '%d models available', count( bigspy_models() ), 'bigspy-ai-list-suite' ), count( bigspy_models() ) ) ); ?></summary>
+				<ul style="columns:2;max-width:640px">
+					<?php foreach ( bigspy_models() as $id => $m ) : ?>
+						<li><?php echo esc_html( $m['label'] ?? $id ); ?> <code><?php echo esc_html( $id ); ?></code><?php echo empty( $m['verified'] ) ? ' <span style="color:#b32d2e">' . esc_html__( 'unavailable', 'bigspy-ai-list-suite' ) . '</span>' : ''; ?></li>
+					<?php endforeach; ?>
+				</ul>
+				<p class="description"><?php esc_html_e( 'The chosen model is never swapped automatically. With the theme’s AI connection, the AI Designer models are listed too.', 'bigspy-ai-list-suite' ); ?></p>
+			</details></td>
+		</tr>
 	</table>
 	<script>
 	( function () {

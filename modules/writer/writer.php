@@ -260,6 +260,7 @@ function bigspy_pw_ajax_background() {
     $word_count = max(500,min(5000,absint($_POST['word_count']??1500)));
     $model = sanitize_text_field(wp_unslash($_POST['model']??''));
     $external = bigspy_pw_sanitize_rows($_POST['external']??'[]',true); $internal = bigspy_pw_sanitize_rows($_POST['internal']??'[]',false);
+    $internal = apply_filters('bigspy_pw_internal_anchors', $internal, $description);
     bigspy_pw_set_status($job_id,array('state'=>'running','message'=>'Researching Google results and writing the article...','post_id'=>$post_id));
     try {
         $research = bigspy_pw_research($description,$external);
