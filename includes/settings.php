@@ -6,7 +6,7 @@ const BSL_OPTION = 'bsl_settings';
 
 function bsl_settings_defaults() {
 	return array(
-		'modules'    => array( 'generator' => 1, 'writer' => 1, 'insights' => 1 ),
+		'modules'    => array( 'generator' => 1, 'writer' => 1, 'insights' => 1, 'badge' => 1 ),
 		// Own AI connection, used only when the theme has no key (see connection.php).
 		'api_url'    => 'https://kymaapi.com/v1/chat/completions',
 		'api_key'    => '',
@@ -20,6 +20,10 @@ function bsl_settings_defaults() {
 			'max_dynamic_labels'   => 6,
 			'popular_window_days'  => 30,
 			'popular_retention'    => 90,
+		),
+		'badge'      => array(
+			'heading' => 'Display your featured badge',
+			'label'   => 'Featured on',
 		),
 		'insights'   => array(
 			'post_types'       => 'product',

@@ -8,6 +8,7 @@ function bsl_module_ids() {
 		'generator' => array( 'bigspy_popular_daily_maintenance' ),
 		'writer'    => array(),
 		'insights'  => array( 'bsi_refresh', 'bsi_monitor', 'bsi_daily', 'bsi_queue_all', 'bsi_resolve_post' ),
+		'badge'     => array(),
 	);
 }
 
@@ -25,6 +26,10 @@ function bsl_modules() {
 		'insights'  => array(
 			'label'       => __( 'Site Insights', 'bigspy-ai-list-suite' ),
 			'description' => __( 'Uptime, SSL, technology and Core Web Vitals of the website behind each listing, plus admin columns.', 'bigspy-ai-list-suite' ),
+		),
+		'badge'     => array(
+			'label'       => __( 'Embed badge', 'bigspy-ai-list-suite' ),
+			'description' => __( 'A "Featured on" badge generator on every listing page. Listed companies copy the code to their website and link back to the listing.', 'bigspy-ai-list-suite' ),
 		),
 	);
 }
