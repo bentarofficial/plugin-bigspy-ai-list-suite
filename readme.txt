@@ -2,7 +2,7 @@
 Contributors: bentar
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPL-2.0-or-later
 
 AI listing generator, post writer and site insights for directory websites.
@@ -16,6 +16,9 @@ With BIGSPY AI Theme WP it uses the theme's AI Designer key, so the key is enter
 Updates come from GitHub Releases in the WordPress dashboard.
 
 == Changelog ==
+
+= 1.1.0 =
+* Embed badge module (from the BIGSPY AI List theme): "Featured on" badge generator on listing pages with Light, Neutral and Dark styles and a copy button, the [bigspy_embed_badge] shortcode, and heading and label settings copied from the old theme. Hidden while the old theme still shows its own badge.
 
 = 1.0.0 =
 * First release. Replaces BIGSPY AI LIST Generator 2.9.9, BIGSPY AI Post Writer 1.2.4 and BigSpy Site Insights 0.3.0, keeping their data.

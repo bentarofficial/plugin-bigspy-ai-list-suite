@@ -6,7 +6,7 @@ WordPress plugin for directory and listing websites built with [BIGSPY AI Theme 
 - **Post Writer:** write researched blog drafts that link to your listings.
 - **Site Insights:** uptime, SSL, technology and performance data for the website behind each listing.
 
-Status: 1.0.0. Install the ZIP from [Releases](https://github.com/bentarofficial/plugin-bigspy-ai-list-suite/releases/latest); later updates arrive in the WordPress dashboard.
+Status: 1.1.0. Install the ZIP from [Releases](https://github.com/bentarofficial/plugin-bigspy-ai-list-suite/releases/latest); later updates arrive in the WordPress dashboard.
 
 Updates will be delivered from GitHub Releases directly in the WordPress dashboard, like the theme.
 
