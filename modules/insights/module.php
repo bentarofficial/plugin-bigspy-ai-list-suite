@@ -12,7 +12,7 @@ define( 'BSI_FILE', BSL_FILE );
 define( 'BSI_DIR', __DIR__ . '/' );
 define( 'BSI_URL', BSL_URL . 'modules/insights/' );
 
-foreach ( array( 'settings', 'store', 'domain', 'estimator', 'collector', 'monitor', 'charts', 'render', 'admin', 'columns', 'cron' ) as $bsl_file ) {
+foreach ( array( 'settings', 'store', 'domain', 'estimator', 'collector', 'monitor', 'charts', 'render', 'admin', 'columns', 'cron', 'traffic' ) as $bsl_file ) {
 	require_once __DIR__ . '/class-bsi-' . $bsl_file . '.php';
 }
 unset( $bsl_file );
@@ -20,6 +20,10 @@ unset( $bsl_file );
 BSI_Store::maybe_upgrade();
 BSI_Store::purge_forbidden();
 BSI_Cron::init();
+BSI_Traffic::init();
+if ( ! get_option( 'bsi_traffic_synced_at' ) ) {
+	BSI_Traffic::schedule_sync();
+}
 BSI_Render::init();
 if ( is_admin() ) {
 	BSI_Admin::init();

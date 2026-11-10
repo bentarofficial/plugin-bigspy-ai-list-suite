@@ -94,6 +94,7 @@ class BSI_Cron {
 			BSI_Collector::refresh( $domain );
 			BSI_Monitor::check( $domain );
 		}
+		update_post_meta( (int) $post_id, BSI_Traffic::META, BSI_Traffic::score_for_post( (int) $post_id ) );
 	}
 
 	public static function refresh_due() {
@@ -106,6 +107,9 @@ class BSI_Cron {
 			BSI_Collector::refresh( $domain );
 		}
 		delete_transient( 'bsi_refresh_lock' );
+		if ( $domains ) {
+			BSI_Traffic::schedule_sync();
+		}
 		// A full batch means more are waiting (first fill): continue soon instead of next hour.
 		if ( count( $domains ) === self::REFRESH_PER_RUN ) {
 			wp_schedule_single_event( time() + 2 * MINUTE_IN_SECONDS, 'bsi_refresh' );

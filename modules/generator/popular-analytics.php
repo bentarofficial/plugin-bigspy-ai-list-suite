@@ -65,7 +65,24 @@ function bigspy_popular_order_clauses( $clauses, $query ) {
     $alias = 'bigspy_popular_score';
     $clauses['join'] .= " LEFT JOIN {$wpdb->postmeta} {$alias} ON ({$wpdb->posts}.ID={$alias}.post_id AND {$alias}.meta_key='_bigspy_popular_clicks')";
     $direction = strtoupper( (string) $query->get( 'order' ) ) === 'ASC' ? 'ASC' : 'DESC';
-    $clauses['orderby'] = "COALESCE(CAST({$alias}.meta_value AS UNSIGNED),0) {$direction}, {$wpdb->posts}.post_date DESC";
+    $clicks = "COALESCE(CAST({$alias}.meta_value AS UNSIGNED),0)";
+    // Source: clicks (visits from this site, default), traffic (the tool website's estimated traffic,
+    // from Site Insights) or blend. The traffic number is only used for ordering, never shown.
+    $source = (string) $query->get( 'bigspy_popular_source' );
+    if ( in_array( $source, array( 'traffic', 'blend' ), true ) ) {
+        $clauses['join'] .= " LEFT JOIN {$wpdb->postmeta} bigspy_traffic_score ON ({$wpdb->posts}.ID=bigspy_traffic_score.post_id AND bigspy_traffic_score.meta_key='_bsi_traffic_score')";
+        $traffic = 'COALESCE(CAST(bigspy_traffic_score.meta_value AS UNSIGNED),0)';
+        if ( 'traffic' === $source ) {
+            $score = "{$traffic} {$direction}, {$clicks} {$direction}";
+        } else {
+            // One click here counts as much as a tenfold jump in the website's traffic, times the weight.
+            $weight = (float) apply_filters( 'bigspy_popular_traffic_weight', 5 );
+            $score  = "({$clicks} + LOG10({$traffic} + 1) * " . number_format( max( 0, $weight ), 2, '.', '' ) . ") {$direction}";
+        }
+        $clauses['orderby'] = "{$score}, {$wpdb->posts}.post_date DESC";
+        return $clauses;
+    }
+    $clauses['orderby'] = "{$clicks} {$direction}, {$wpdb->posts}.post_date DESC";
     return $clauses;
 }
 add_filter( 'posts_clauses', 'bigspy_popular_order_clauses', 20, 2 );
