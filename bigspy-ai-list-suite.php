@@ -3,7 +3,7 @@
  * Plugin Name:       BIGSPY AI List Suite
  * Plugin URI:        https://github.com/bentarofficial/plugin-bigspy-ai-list-suite
  * Description:       AI listing generator, post writer and site insights for directory websites, in one plugin with modules you can turn on or off.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Bentar
@@ -15,7 +15,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'BSL_VERSION', '1.1.0' );
+define( 'BSL_VERSION', '1.2.0' );
 define( 'BSL_FILE', __FILE__ );
 define( 'BSL_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BSL_URL', plugin_dir_url( __FILE__ ) );
