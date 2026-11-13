@@ -2,7 +2,7 @@
 Contributors: bentar
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPL-2.0-or-later
 
 AI listing generator, post writer and site insights for directory websites.
@@ -16,6 +16,9 @@ With BIGSPY AI Theme WP it uses the theme's AI Designer key, so the key is enter
 Updates come from GitHub Releases in the WordPress dashboard.
 
 == Changelog ==
+
+= 1.2.1 =
+* Settings: a link to serper.dev under the Serper key field, and in the Listing Generator notice when the key is missing, so you know where to get the Web Research key.
 
 = 1.2.0 =
 * Popular listings can be ordered by website traffic from Site Insights, or by a blend of traffic and clicks. The traffic score is synced to listing meta (_bsi_traffic_score) and used for sorting only.
