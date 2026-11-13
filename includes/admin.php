@@ -84,7 +84,14 @@ function bsl_settings_page() {
 						<?php if ( $s['serper_key'] ) : ?>
 							<label style="margin-left:8px"><input type="checkbox" name="bsl[serper_key_clear]" value="1"> <?php esc_html_e( 'Remove', 'bigspy-ai-list-suite' ); ?></label>
 						<?php endif; ?>
-						<p class="description"><?php esc_html_e( 'Optional. Used by Listing Generator and Post Writer to research the web.', 'bigspy-ai-list-suite' ); ?></p></td>
+						<p class="description"><?php esc_html_e( 'Optional. Used by Listing Generator and Post Writer to research the web.', 'bigspy-ai-list-suite' ); ?>
+							<?php
+							printf(
+								/* translators: %s: link to the Serper API key page */
+								esc_html__( 'Get a free key at %s (sign up, then copy the key from the API Key page).', 'bigspy-ai-list-suite' ),
+								'<a href="https://serper.dev/api-key" target="_blank" rel="noopener noreferrer">serper.dev</a>'
+							);
+							?></p></td>
 				</tr>
 			</table>
 			<?php do_action( 'bsl_settings_sections', $s ); ?>
