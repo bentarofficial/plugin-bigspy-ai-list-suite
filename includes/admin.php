@@ -89,7 +89,7 @@ function bsl_settings_page() {
 							printf(
 								/* translators: %s: link to the Serper API key page */
 								esc_html__( 'Get a free key at %s (sign up, then copy the key from the API Key page).', 'bigspy-ai-list-suite' ),
-								'<a href="https://serper.dev/api-key" target="_blank" rel="noopener noreferrer">serper.dev</a>'
+								'<a href="https://serper.dev/" target="_blank" rel="noopener noreferrer">serper.dev</a>'
 							);
 							?></p></td>
 				</tr>
