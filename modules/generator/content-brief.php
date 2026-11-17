@@ -1,10 +1,10 @@
 <?php
 /**
- * Content brief: the step between "LISTING NOW" and the AI call.
+ * Content brief: what a listing or post must give the reader.
  *
- * The editor picks one content route (the single reader question the listing must answer)
- * and the customer values the listing must deliver. Both are turned into prompt
- * instructions and stored on the listing.
+ * A product has one listing, so a listing is always a full profile that delivers every
+ * customer value. Content routes (one reader question per article) belong to blog posts:
+ * the Post Writer lets the editor pick the route and the values for each post.
  */
 defined( 'ABSPATH' ) || exit;
 
@@ -111,47 +111,24 @@ function bigspy_content_brief_prompt( $route, array $values ) {
 	return $out;
 }
 
-/** The brief step shown after "LISTING NOW" is pressed. */
-function bigspy_render_content_brief_step( $post_id = 0 ) {
-	$saved_route  = $post_id ? (string) get_post_meta( $post_id, '_bigspy_content_route', true ) : '';
-	$saved_route  = $saved_route !== '' ? bigspy_sanitize_content_route( $saved_route ) : 'profile';
-	$saved_values = $post_id ? get_post_meta( $post_id, '_bigspy_customer_values', true ) : '';
-	$all_values   = bigspy_customer_values();
-	$saved_values = is_array( $saved_values ) ? $saved_values : array_keys( $all_values );
+/** Editor notes field on the Create listing form. */
+function bigspy_render_editor_notes_field() {
 	?>
-	<div id="bigspy-brief-step" style="display:none;margin-top:16px;padding:16px;background:#fff;border:1px solid #c3c4c7;border-left:4px solid #003366;border-radius:4px">
-		<h3 style="margin:0 0 4px">Content brief</h3>
-		<p style="margin:0 0 12px">Pick the one question this listing must answer and the value it must give the reader. The AI writes to this brief.</p>
-		<fieldset style="margin:0 0 14px">
-			<legend style="font-weight:600;margin-bottom:6px">Content route</legend>
-			<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">
-			<?php foreach ( bigspy_content_routes() as $key => $route ) : ?>
-				<label style="display:block;padding:8px 10px;border:1px solid #dcdcde;border-radius:4px;background:#f6f7f7">
-					<input type="radio" name="bigspy-content-route" value="<?php echo esc_attr( $key ); ?>" <?php checked( $saved_route, $key ); ?>>
-					<strong><?php echo esc_html( $route['label'] ); ?></strong><br>
-					<span class="description"><?php echo esc_html( $route['question'] ); ?></span>
-				</label>
-			<?php endforeach; ?>
-			</div>
-		</fieldset>
-		<fieldset style="margin:0 0 14px">
-			<legend style="font-weight:600;margin-bottom:6px">Value for the reader</legend>
-			<?php foreach ( $all_values as $key => $value ) : ?>
-				<label style="display:block;margin:4px 0">
-					<input type="checkbox" class="bigspy-customer-value" value="<?php echo esc_attr( $key ); ?>" <?php checked( in_array( $key, $saved_values, true ) ); ?>>
-					<?php echo esc_html( $value['label'] ); ?>
-				</label>
-			<?php endforeach; ?>
-		</fieldset>
-		<p style="margin:0 0 14px">
-			<label for="bigspy-editor-notes" style="font-weight:600">Editor notes: what you saw when you tried it</label>
-			<textarea id="bigspy-editor-notes" rows="3" style="width:100%" placeholder="Optional, strongly recommended. First-hand findings only: what you tested, the result, what surprised you, what failed."></textarea>
-			<span class="description">This is what makes the listing different from every other page about this product. Without notes the AI never claims hands-on testing.</span>
-		</p>
-		<button type="button" id="bigspy-brief-confirm" class="button button-primary" style="min-width:180px;height:40px;font-weight:600">GENERATE LISTING</button>
-		<button type="button" id="bigspy-brief-back" class="button" style="height:40px;margin-left:6px">Back</button>
+	<div style="margin-top:14px;padding:12px;background:#f0f7f0;border:1px solid #b8d8b8;border-radius:6px">
+		<label for="bigspy-editor-notes"><strong>Editor notes: what you saw when you tried it</strong></label>
+		<textarea id="bigspy-editor-notes" rows="3" style="width:100%;margin-top:6px" placeholder="Optional, strongly recommended. First-hand findings only: what you tested, the result, what surprised you, what failed."></textarea>
+		<p class="description" style="margin:4px 0 0">This is what makes the listing different from every other page about this product. Without notes the AI never claims hands-on testing.</p>
 	</div>
 	<?php
+}
+
+/** Reader-value checkboxes for the Post Writer. */
+function bigspy_render_customer_values_field( $saved = null ) {
+	$all   = bigspy_customer_values();
+	$saved = is_array( $saved ) ? $saved : array_keys( $all );
+	foreach ( $all as $key => $value ) {
+		echo '<label style="display:block;margin:4px 0"><input type="checkbox" class="bigspy-customer-value" value="' . esc_attr( $key ) . '" ' . checked( in_array( $key, $saved, true ), true, false ) . '> ' . esc_html( $value['label'] ) . '</label>';
+	}
 }
 
 /** Prompt block for the editor's own first-hand notes. */
@@ -258,10 +235,20 @@ function bigspy_sanitize_post_route( $route ) {
 	return array_key_exists( $route, bigspy_post_routes() ) ? $route : 'guide';
 }
 
-/** Prompt block for a post's route. */
-function bigspy_post_brief_prompt( $route ) {
+/** Prompt block for a post's route and the reader values it must deliver. */
+function bigspy_post_brief_prompt( $route, $values = null ) {
 	$routes = bigspy_post_routes();
+	$all    = bigspy_customer_values();
 	$r      = $routes[ $route ] ?? $routes['guide'];
-	return 'CONTENT ROUTE: ' . $r['label'] . '. The whole article must answer this reader question: "' . $r['question'] . '" ' . $r['prompt']
-		. ' Whatever the route, tell the reader the risks and limits and who each product is not for, and what to do after signing up.';
+	$values = is_array( $values ) ? $values : array_keys( $all );
+	$out    = 'CONTENT ROUTE: ' . $r['label'] . '. The whole article must answer this reader question: "' . $r['question'] . '" ' . $r['prompt'];
+	if ( $values ) {
+		$out .= "\nREADER VALUES this article must deliver (apply them to the topic and to each product covered; adapt the section headings to the article):";
+		foreach ( $values as $key ) {
+			if ( isset( $all[ $key ] ) ) {
+				$out .= "\n- " . $all[ $key ]['label'] . ': ' . $all[ $key ]['prompt'];
+			}
+		}
+	}
+	return $out;
 }

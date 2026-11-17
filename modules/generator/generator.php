@@ -490,11 +490,12 @@ function bigspy_render_listing_box($post) {
             </p>
         </div>
 
+        <?php bigspy_render_editor_notes_field(); ?>
+
         <p style="margin-top:16px">
             <button type="button" id="bigspy-list-now" class="button button-primary" style="min-width:180px;height:40px;font-weight:600">LISTING NOW</button>
             <button type="button" id="bigspy-test-selected" class="button" style="height:40px;margin-left:6px">Test Selected Model</button>
         </p>
-        <?php bigspy_render_content_brief_step((int)$post->ID); ?>
 
         <div id="bigspy-loading" style="display:none;margin:12px 0">
             <span class="spinner is-active" style="float:none"></span> Calling AI and generating listing...
@@ -620,20 +621,7 @@ function bigspy_render_listing_box($post) {
             finally { btn.disabled=false; loading.style.display='none'; }
         };
 
-        const briefStep = document.getElementById('bigspy-brief-step');
-        const listNow = document.getElementById('bigspy-list-now');
-        listNow.onclick = function(){
-            briefStep.style.display='block';
-            listNow.disabled=true;
-            briefStep.scrollIntoView({block:'nearest'});
-            const first=briefStep.querySelector('input[name="bigspy-content-route"]:checked');
-            if (first) first.focus();
-        };
-        document.getElementById('bigspy-brief-back').onclick = function(){
-            briefStep.style.display='none';
-            listNow.disabled=false;
-        };
-        document.getElementById('bigspy-brief-confirm').onclick = async function(){
+        document.getElementById('bigspy-list-now').onclick = async function(){
             saveInternalLinkHistory();
             const btn=this;
             btn.disabled=true; loading.style.display='block'; status.innerHTML='';
@@ -666,9 +654,6 @@ function bigspy_render_listing_box($post) {
                     use_website_information:document.getElementById('bigspy-use-website').checked ? '1' : '',
                     use_web_research:document.getElementById('bigspy-use-web-research').checked ? '1' : '',
                     model:document.getElementById('bigspy-model').value,
-                    content_route:(briefStep.querySelector('input[name="bigspy-content-route"]:checked')||{}).value||'profile',
-                    customer_values:Array.from(briefStep.querySelectorAll('.bigspy-customer-value:checked')).map(function(el){return el.value;}).join(','),
-                    customer_values_set:'1',
                     editor_notes:document.getElementById('bigspy-editor-notes').value
                 };
                 const d=await call('bigspy_generate_listing',fields);
@@ -1158,7 +1143,7 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
     $model=sanitize_text_field(wp_unslash($_POST['model']??''));
     $use_website_information=!empty($_POST['use_website_information']);
     $use_web_research=!empty($_POST['use_web_research']) && bigspy_get_serper_key() !== '';
-    // Content brief. Requests without the brief step (older callers) get the profile route and every value.
+    // A product has one listing: it is always the full profile and delivers every reader value. Routes are chosen per blog post.
     $content_route=bigspy_sanitize_content_route(wp_unslash($_POST['content_route']??''));
     $customer_values=empty($_POST['customer_values_set']) ? array_keys(bigspy_customer_values()) : bigspy_sanitize_customer_values(wp_unslash($_POST['customer_values']??''));
 
