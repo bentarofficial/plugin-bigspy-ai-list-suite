@@ -3,6 +3,7 @@
 defined( 'ABSPATH' ) || exit;
 
 require_once __DIR__ . '/generator.php';
+require_once __DIR__ . '/content-brief.php';
 bigspy_popular_maybe_install();
 
 /** True on the suite's Create listing or Write post screen, which use the internal link history. */

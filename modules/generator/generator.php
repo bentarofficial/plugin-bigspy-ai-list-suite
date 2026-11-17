@@ -15,8 +15,8 @@ require_once __DIR__ . '/popular-analytics.php';
 define('BIGSPY_AI_TITLE_LIMIT', 70);
 define('BIGSPY_AI_SEO_TITLE_LIMIT', 60);
 define('BIGSPY_AI_SEO_DESC_LIMIT', 160);
-define('BIGSPY_AI_DESC_MIN_WORDS', 1800);
-define('BIGSPY_AI_DESC_MAX_WORDS', 2200);
+define('BIGSPY_AI_DESC_MIN_WORDS', 700);
+define('BIGSPY_AI_DESC_MAX_WORDS', 1500);
 
 function bigspy_default_prompt() {
     $site = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ) ?: 'this directory';
@@ -58,12 +58,11 @@ Use related terminology, entities, synonyms, and semantic variations naturally.
 The article must be written for humans first and search engines second.
 
 ARTICLE LENGTH
-- The main listing description MUST target approximately 2,000 English words.
-- Acceptable range: 1,800 to 2,200 words.
-- Do not produce a short 300-500 word summary.
-- Do not pad the article with meaningless repetition.
-- Every section should provide useful information.
-- If the available evidence is limited, expand through useful explanation, practical context, use cases, limitations, selection guidance, workflow examples, and decision-making information without inventing unsupported product facts.
+- Length follows the evidence: 700 to 1,500 English words.
+- Write as much as the sources support and stop there. A complete 800-word listing is better than a padded 1,500-word one.
+- Never add generic explanation, repeated ideas or filler sections to reach a word count.
+- Every paragraph must state something specific to this product. Delete any sentence that would be equally true of every product in its category.
+- Do not repeat in the article what the key_features, pros and cons lists already say; explain what those points mean in practice instead.
 
 CONTENT STRUCTURE
 Create a substantial, well-organized listing using clean HTML suitable for WordPress.
@@ -135,6 +134,7 @@ The tool/product/service URL, homepage URL, and affiliate URL are reference info
 Do not invent URLs.
 Do not replace an affiliate URL with a different URL.
 Do not place raw affiliate links into article prose unless the user supplied them and the field explicitly requires it.
+When a specific fact (a price, a limit, a policy) comes from a page listed in the web research results, you may link the source once with target="_blank" rel="noopener", using at most 3 such source links and only URLs that appear in the research results.
 
 DYNAMIC LISTING ATTRIBUTES
 - First identify the most appropriate listing_type from the actual source: examples include AI Tool, SaaS, Software, Product, Travel Website, Hotel, Restaurant, Course, Service, Marketplace, or another specific type. Do not force the listing into a predefined category when the evidence supports another type.
@@ -177,14 +177,14 @@ pros
 cons
 integrations
 
-The description_html value must contain the full approximately 2,000-word article in clean WordPress-compatible HTML.
+The description_html value must contain the full article in clean WordPress-compatible HTML.
 Do not include <html>, <head>, <body>, <style>, <script>, or Markdown.
 Do not put the H1 in description_html.
 
 QUALITY CHECK BEFORE RETURNING JSON
 Before returning the final JSON, internally verify:
 - Everything is in English.
-- description_html is approximately 1,800-2,200 words.
+- description_html is 700-1,500 words and contains no filler written only to add length.
 - The article is informative rather than repetitive.
 - There is no unsupported factual claim presented as fact.
 - The primary keyword is used naturally.
@@ -494,6 +494,7 @@ function bigspy_render_listing_box($post) {
             <button type="button" id="bigspy-list-now" class="button button-primary" style="min-width:180px;height:40px;font-weight:600">LISTING NOW</button>
             <button type="button" id="bigspy-test-selected" class="button" style="height:40px;margin-left:6px">Test Selected Model</button>
         </p>
+        <?php bigspy_render_content_brief_step((int)$post->ID); ?>
 
         <div id="bigspy-loading" style="display:none;margin:12px 0">
             <span class="spinner is-active" style="float:none"></span> Calling AI and generating listing...
@@ -619,7 +620,20 @@ function bigspy_render_listing_box($post) {
             finally { btn.disabled=false; loading.style.display='none'; }
         };
 
-        document.getElementById('bigspy-list-now').onclick = async function(){
+        const briefStep = document.getElementById('bigspy-brief-step');
+        const listNow = document.getElementById('bigspy-list-now');
+        listNow.onclick = function(){
+            briefStep.style.display='block';
+            listNow.disabled=true;
+            briefStep.scrollIntoView({block:'nearest'});
+            const first=briefStep.querySelector('input[name="bigspy-content-route"]:checked');
+            if (first) first.focus();
+        };
+        document.getElementById('bigspy-brief-back').onclick = function(){
+            briefStep.style.display='none';
+            listNow.disabled=false;
+        };
+        document.getElementById('bigspy-brief-confirm').onclick = async function(){
             saveInternalLinkHistory();
             const btn=this;
             btn.disabled=true; loading.style.display='block'; status.innerHTML='';
@@ -651,7 +665,11 @@ function bigspy_render_listing_box($post) {
                     max_dynamic_labels:document.getElementById('bigspy-max-dynamic-labels').value,
                     use_website_information:document.getElementById('bigspy-use-website').checked ? '1' : '',
                     use_web_research:document.getElementById('bigspy-use-web-research').checked ? '1' : '',
-                    model:document.getElementById('bigspy-model').value
+                    model:document.getElementById('bigspy-model').value,
+                    content_route:(briefStep.querySelector('input[name="bigspy-content-route"]:checked')||{}).value||'profile',
+                    customer_values:Array.from(briefStep.querySelectorAll('.bigspy-customer-value:checked')).map(function(el){return el.value;}).join(','),
+                    customer_values_set:'1',
+                    editor_notes:document.getElementById('bigspy-editor-notes').value
                 };
                 const d=await call('bigspy_generate_listing',fields);
                 if (!d.background || !d.job_id) throw new Error('The listing job could not be started.');
@@ -1140,6 +1158,15 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
     $model=sanitize_text_field(wp_unslash($_POST['model']??''));
     $use_website_information=!empty($_POST['use_website_information']);
     $use_web_research=!empty($_POST['use_web_research']) && bigspy_get_serper_key() !== '';
+    // Content brief. Requests without the brief step (older callers) get the profile route and every value.
+    $content_route=bigspy_sanitize_content_route(wp_unslash($_POST['content_route']??''));
+    $customer_values=empty($_POST['customer_values_set']) ? array_keys(bigspy_customer_values()) : bigspy_sanitize_customer_values(wp_unslash($_POST['customer_values']??''));
+
+    $editor_notes=sanitize_textarea_field(wp_unslash($_POST['editor_notes']??''));
+    $link_candidates=bigspy_internal_link_candidates($post_id);
+    foreach($internal_links as $typed_link) {
+        if(!empty($typed_link['url'])) $link_candidates[]=array('type'=>'page','title'=>(string)($typed_link['label']??''),'url'=>(string)$typed_link['url']);
+    }
 
     if($use_website_information) $stage('Reading the website…');
     $source_text=$use_website_information ? bigspy_fetch_page_text($tool ?: $home) : '';
@@ -1175,7 +1202,7 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
         . "\n\nRequirements:\n"
         . "1. title: this becomes the WordPress product title and the theme H1. Maximum 70 characters. Make it the actual tool/product name or a clear SEO-friendly title, not a generic phrase.\n"
         . "2. short_description: this becomes the WooCommerce Product short description and the BIGSPY card tagline/excerpt. Keep it concise, useful, and in English.\n"
-        . "3. pricing: If pricing information is supplied or supported by the source, populate flexible pricing fields. If pricing is unavailable or variable, leave numeric price fields empty and use an appropriate pricing_type such as variable, contact, quote, or price_on_website. Never invent a price.\n3. description_html: this becomes the WooCommerce Product description and the main BIGSPY listing article. Write approximately ".BIGSPY_AI_DESC_MIN_WORDS."-".BIGSPY_AI_DESC_MAX_WORDS." words. This is the MAIN listing article, not a short summary. Use clean HTML with H2/H3/P/UL/LI when useful. Do NOT include any H1 in description_html, even if other instructions ask for one: the theme already renders the title as the page H1, so the article must start directly with its first H2.\n"
+        . "3. pricing: If pricing information is supplied or supported by the source, populate flexible pricing fields. If pricing is unavailable or variable, leave numeric price fields empty and use an appropriate pricing_type such as variable, contact, quote, or price_on_website. Never invent a price.\n3. description_html: this becomes the WooCommerce Product description and the main BIGSPY listing article. Write ".BIGSPY_AI_DESC_MIN_WORDS." to ".BIGSPY_AI_DESC_MAX_WORDS." words, as long as the sources support and no longer; never pad. This is the MAIN listing article, not a short summary. Use clean HTML with H2/H3/P/UL/LI when useful. Do NOT include any H1 in description_html, even if other instructions ask for one: the theme already renders the title as the page H1, so the article must start directly with its first H2.\n"
         . "4. seo_title: this is written directly to Rank Math as the SEO title. Maximum ".BIGSPY_AI_SEO_TITLE_LIMIT." characters.\n"
         . "5. seo_description: this is written directly to Rank Math as the meta description. Maximum ".BIGSPY_AI_SEO_DESC_LIMIT." characters.\n"
         . "6. focus_keyword: use EXACTLY the supplied primary_keyword when it is present. If it is empty, choose one suitable primary keyword.\n"
@@ -1187,8 +1214,11 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
 12. company_name, pricing, pricing_type, starting_price, price_min, price_max, price_currency, price_unit, price_custom_text, free_trial, api_available, api_url, founded_year, key_features, pros, cons, integrations: populate these legacy/theme fields only when supported by the source. They remain for backward compatibility; they must not constrain dynamic_attributes. Never invent unsupported prices.\n"
         . "13. Theme synchronization: the returned fields will be mapped into BIGSPY Theme listing fields including tagline, flexible pricing fields, free trial, API availability/API URL, company, founded year, features, pros, cons, integrations, official URL, homepage URL and affiliate URL.\n"
         . "14. SEO synchronization: the plugin will write one primary focus keyword plus up to four secondary focus keywords to Rank Math as a comma-separated focus keyword list. Do not omit supplied keywords.\n\n"
+        . bigspy_content_brief_prompt($content_route,$customer_values) . "\n\n"
+        . bigspy_editor_notes_prompt($editor_notes) . "\n\n"
+        . bigspy_internal_links_prompt($link_candidates) . "\n\n"
         . "Write everything in English. Only return valid JSON, no Markdown, using exactly this schema:\n"
-        . '{"title":"","short_description":"","description_html":"","seo_title":"","seo_description":"","slug":"","focus_keyword":"","secondary_keywords":[],"categories":[],"tags":[],"listing_type":"","dynamic_attributes":[],"company_name":"","pricing":"","pricing_type":"","starting_price":"","price_min":"","price_max":"","price_currency":"","price_unit":"","price_custom_text":"","free_trial":"","api_available":"","api_url":"","founded_year":"","key_features":[],"pros":[],"cons":[],"integrations":[]}';
+        . '{"title":"","short_description":"","description_html":"","seo_title":"","seo_description":"","slug":"","focus_keyword":"","secondary_keywords":[],"categories":[],"tags":[],"listing_type":"","dynamic_attributes":[],"company_name":"","pricing":"","pricing_type":"","starting_price":"","price_min":"","price_max":"","price_currency":"","price_unit":"","price_custom_text":"","free_trial":"","api_available":"","api_url":"","founded_year":"","key_features":[],"pros":[],"cons":[],"integrations":[],"best_for":[],"not_for":[],"getting_started":[]}';
 
     $stage('The AI is writing the listing. This usually takes 1 to 3 minutes…');
     $result=bigspy_call_ai([
@@ -1222,6 +1252,7 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
     if($title==='') $title=$existing_title ?: sanitize_text_field($short ?: ($home ?: ($tool ?: 'BIGSPY Listing')));
     $short_desc=sanitize_textarea_field((string)($data['short_description']??$short));
     $description=bigspy_mark_listing_links_sponsored(bigspy_strip_duplicate_h1(wp_kses_post((string)($data['description_html']??''))), array($tool,$home,$affiliate));
+    $description=bigspy_strip_unknown_internal_links($description, wp_list_pluck($link_candidates,'url'));
     $seo_title=bigspy_limit(sanitize_text_field((string)($data['seo_title']??'')),$GLOBALS['bigspy_seo_title_limit']??BIGSPY_AI_SEO_TITLE_LIMIT);
     $seo_desc=bigspy_limit(sanitize_text_field((string)($data['seo_description']??'')),$GLOBALS['bigspy_seo_desc_limit']??BIGSPY_AI_SEO_DESC_LIMIT);
     $ai_focus=sanitize_text_field($data['focus_keyword']??'');
@@ -1268,6 +1299,13 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
     update_post_meta($post_id,'_bigspy_listing_type',$listing_type);
     update_post_meta($post_id,'_bigspy_dynamic_attributes',$dynamic_attributes);
     update_post_meta($post_id,'_bigspy_internal_links',$internal_links);
+    update_post_meta($post_id,'_bigspy_content_route',$content_route);
+    update_post_meta($post_id,'_bigspy_editor_notes',$editor_notes);
+    update_post_meta($post_id,'_bigspy_customer_values',$customer_values);
+    foreach(array('best_for'=>4,'not_for'=>3,'getting_started'=>5) as $brief_key=>$brief_max) {
+        $brief_items=array_slice(array_values(array_filter(array_map('sanitize_text_field',(array)($data[$brief_key]??array())))),0,$brief_max);
+        update_post_meta($post_id,'_bigspy_'.$brief_key,$brief_items);
+    }
     bigspy_update_listing_field($post_id,'listing_type',$listing_type);
     bigspy_update_listing_field($post_id,'dynamic_attributes',$dynamic_attributes);
     bigspy_update_listing_field($post_id,'internal_links',$internal_links);
