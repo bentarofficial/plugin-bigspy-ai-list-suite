@@ -4,6 +4,7 @@ defined( 'ABSPATH' ) || exit;
 
 require_once __DIR__ . '/generator.php';
 require_once __DIR__ . '/content-brief.php';
+require_once __DIR__ . '/listing-tools.php';
 bigspy_popular_maybe_install();
 
 /** True on the suite's Create listing or Write post screen, which use the internal link history. */
@@ -43,6 +44,17 @@ add_action( 'bsl_settings_sections', function ( $s ) {
 				<?php endfor; ?>
 			</select>
 			<p class="description"><?php esc_html_e( 'The AI picks the most relevant attributes for each listing type. Default: 6.', 'bigspy-ai-list-suite' ); ?></p></td>
+		</tr>
+		<tr>
+			<th scope="row"><?php esc_html_e( 'New categories', 'bigspy-ai-list-suite' ); ?></th>
+			<td><label><input type="radio" name="bsl[generator][category_mode]" value="locked" <?php checked( 'open' !== ( $g['category_mode'] ?? 'locked' ) ); ?>> <?php esc_html_e( 'Use existing categories only (recommended)', 'bigspy-ai-list-suite' ); ?></label><br>
+			<label><input type="radio" name="bsl[generator][category_mode]" value="open" <?php checked( 'open', $g['category_mode'] ?? 'locked' ); ?>> <?php esc_html_e( 'Let the AI create new categories', 'bigspy-ai-list-suite' ); ?></label>
+			<p class="description"><?php esc_html_e( 'With existing categories only, the AI picks from categories that already hold listings, and you can pick any category on the Create listing form.', 'bigspy-ai-list-suite' ); ?></p></td>
+		</tr>
+		<tr>
+			<th scope="row"><label for="bsl-facts-stale"><?php esc_html_e( 'Re-check listing facts after (days)', 'bigspy-ai-list-suite' ); ?></label></th>
+			<td><input id="bsl-facts-stale" type="number" min="7" max="365" name="bsl[generator][facts_stale_days]" value="<?php echo esc_attr( $g['facts_stale_days'] ?? 90 ); ?>">
+			<p class="description"><?php esc_html_e( 'The "Facts checked" column on Products turns red after this many days.', 'bigspy-ai-list-suite' ); ?></p></td>
 		</tr>
 		<tr>
 			<th scope="row"><?php esc_html_e( 'Web research', 'bigspy-ai-list-suite' ); ?></th>
@@ -111,6 +123,8 @@ add_filter( 'bsl_sanitize_settings', function ( $s, $in, $old ) {
 		'popular_window_days'  => $window,
 		'popular_retention'    => max( $window, min( 3650, absint( $g['popular_retention'] ?? 90 ) ) ),
 		'system_prompt'        => sanitize_textarea_field( (string) ( $g['system_prompt'] ?? '' ) ),
+		'category_mode'        => 'open' === ( $g['category_mode'] ?? '' ) ? 'open' : 'locked',
+		'facts_stale_days'     => max( 7, min( 365, absint( $g['facts_stale_days'] ?? 90 ) ) ),
 	) );
 	if ( $old['generator']['popular_window_days'] !== $window ) {
 		add_action( 'shutdown', 'bigspy_popular_rebuild_scores' );

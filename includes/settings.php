@@ -20,6 +20,8 @@ function bsl_settings_defaults() {
 			'max_dynamic_labels'   => 6,
 			'popular_window_days'  => 30,
 			'popular_retention'    => 90,
+			'category_mode'        => 'locked',
+			'facts_stale_days'     => 90,
 		),
 		'badge'      => array(
 			'heading' => 'Display your featured badge',

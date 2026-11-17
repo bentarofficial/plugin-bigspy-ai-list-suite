@@ -11,7 +11,7 @@ function lists(){return{label:document.getElementById('bigspy-internal-label-his
 // Only the Generator's empty rows are filled; Post Writer rows are prefilled by the server on the same page.
 function isGen(r){return /^bigspy-internal-label-/.test(r.label.id);}
 function generatorRows(){return rows().filter(isGen);}
-function hydrateRows(){var g=generatorRows();if(!history.length||g.some(function(r){return r.label.value.trim()||r.url.value.trim();}))return;g.slice(0,history.length).forEach(function(r,i){r.label.value=history[i].label;r.url.value=history[i].url;});}
+function hydrateRows(){return;var g=generatorRows();if(!history.length||g.some(function(r){return r.label.value.trim()||r.url.value.trim();}))return;g.slice(0,history.length).forEach(function(r,i){r.label.value=history[i].label;r.url.value=history[i].url;});}
 function render(){var l=lists();if(l.label)l.label.innerHTML=history.map(function(x){return'<option value="'+esc(x.label)+'"></option>';}).join('');if(l.url)l.url.innerHTML=history.map(function(x){return'<option value="'+esc(x.url)+'"></option>';}).join('');}
 function persist(items){history=uniq(items);render();return api('save',history).then(function(x){history=uniq(x);render();return history;});}
 function match(target){var row=rows().filter(function(r){return r.label===target||r.url===target;})[0];if(!row)return;var val=target.value.trim(),p;if(target===row.label){p=history.filter(function(x){return x.label===val;})[0];if(p)row.url.value=p.url;}else{p=history.filter(function(x){return x.url===val;})[0];if(p)row.label.value=p.label;}}

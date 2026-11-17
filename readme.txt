@@ -2,7 +2,7 @@
 Contributors: bentar
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPL-2.0-or-later
 
 AI listing generator, post writer and site insights for directory websites.
@@ -16,6 +16,15 @@ With BIGSPY AI Theme WP it uses the theme's AI Designer key, so the key is enter
 Updates come from GitHub Releases in the WordPress dashboard.
 
 == Changelog ==
+
+= 1.4.0 =
+* Create listing: new Pricing page URL field. The page is read and used as the main source for prices, plan limits, trials and refunds.
+* Create listing: warns when the website already has a listing (one product, one listing) and links to it.
+* Create listing: Category field. New setting "New categories": by default the AI may only use categories that already hold listings, and paths that do not match are left out and reported instead of creating near-duplicates.
+* Create listing: fields renumbered, the last AI model is remembered, saved internal links are offered as suggestions instead of pre-filling every row.
+* Listing facts box on the product screen: starting price, free plan, free trial, card required, refund policy, platforms, with a "last checked" date, a "Re-check with AI" button that reads the pricing page, and a "Facts checked" column on Products that turns red after the number of days set in the settings (default 90). The AI fills the facts when a listing is created; they count as checked only after the editor confirms them.
+* Affiliate click tracking: clicks from any page to a listed product's website are counted per page. Optional SubID parameter per listing adds the page slug to the outgoing link so the affiliate network reports which page made the sale. Report "Affiliate clicks, last 30 days" by page and by article type on the settings page.
+* Write post: pick a listed product in External Anchors to fill its website and affiliate URLs; Editor notes; Focus keyword (used exactly when given); the brief box shows what to include for the chosen article type; warns before writing a second article of the same type about the same product; the last AI model is remembered; internal anchors are no longer pre-filled.
 
 = 1.3.0 =
 * Write post: choose the article type (Guide, Best List, Tutorial, Pricing, Trial & Demo, Offers & Deals, Alternatives by need, Case Study & Testing, Migration). Each type shows its recommended length, and the length follows the type, so there is no word count to enter.

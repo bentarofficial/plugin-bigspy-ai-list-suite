@@ -437,25 +437,31 @@ function bigspy_render_listing_box($post) {
                 <label><strong>2. Homepage URL</strong></label>
                 <input type="url" id="bigspy-home-url" style="width:100%" placeholder="https://example.com">
             </p>
+            <div id="bigspy-duplicate-notice" style="grid-column:1/-1;display:none"></div>
             <p style="margin:0">
-                <label><strong>3. Affiliate URL</strong></label>
+                <label><strong>3. Pricing page URL</strong></label>
+                <input type="url" id="bigspy-pricing-url" style="width:100%" placeholder="https://example.com/pricing (recommended)">
+            </p>
+            <p style="margin:0">
+                <label><strong>4. Affiliate URL</strong></label>
                 <input type="url" id="bigspy-affiliate-url" style="width:100%" placeholder="Optional">
             </p>
             <p style="margin:0">
-                <label><strong>4. Primary Keyword</strong></label>
+                <label><strong>5. Primary Keyword</strong></label>
                 <input type="text" id="bigspy-primary-keyword" style="width:100%" placeholder="Optional">
             </p>
             <p style="margin:0">
-                <label><strong>5. 4 Secondary Keywords</strong></label>
+                <label><strong>6. 4 Secondary Keywords</strong></label>
                 <input type="text" id="bigspy-secondary-keywords" style="width:100%" placeholder="keyword 1, keyword 2, keyword 3, keyword 4">
             </p>
             <p style="margin:0">
-                <label><strong>6. Short Description</strong></label>
+                <label><strong>7. Short Description</strong></label>
                 <textarea id="bigspy-short-input" rows="3" style="width:100%" placeholder="Optional"></textarea>
             </p>
+            <?php bigspy_render_category_field(); ?>
             <div style="grid-column:1/-1;padding:12px;background:#f7f7f7;border:1px solid #dcdcde;border-radius:6px">
-                <strong>7. Internal Links (Optional)</strong>
-                <p style="margin:6px 0 10px">Add up to 8 internal links for this listing. Every field is optional. Leave a pair empty when you do not need it.</p>
+                <strong>9. Internal Links (Optional)</strong>
+                <p style="margin:6px 0 10px">Optional. Related listings, categories and posts are linked automatically; add a row only to force a specific link.</p>
                 <?php $saved_internal_links = get_post_meta($post->ID, '_bigspy_internal_links', true); $saved_internal_links = is_array($saved_internal_links) ? $saved_internal_links : array(); ?>
                 <?php for ($i=0; $i<8; $i++): $il = isset($saved_internal_links[$i]) && is_array($saved_internal_links[$i]) ? $saved_internal_links[$i] : array(); ?>
                     <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;margin:0 0 8px">
@@ -465,11 +471,11 @@ function bigspy_render_listing_box($post) {
                 <?php endfor; ?>
                 <datalist id="bigspy-internal-label-history"></datalist>
                 <datalist id="bigspy-internal-url-history"></datalist>
-                <p class="description" style="margin:4px 0 0">Links typed here are saved automatically and filled into the next new listing. Clear a row to remove that link.</p>
+                <p class="description" style="margin:4px 0 0">Links typed here are remembered as suggestions for the next listing.</p>
             </div>
-            <div style="grid-column:1/-1;padding:12px;background:#fff8e5;border:1px solid #e0c36a;border-radius:6px"><strong>7. Research Sources</strong><p style="margin:6px 0 8px">Choose which external information the AI may use. Website Information is optional; Web Research uses Google web/news results and can still work when the partner website blocks direct crawling.</p><label style="display:block;margin:5px 0"><input type="checkbox" id="bigspy-use-website" checked> Use Website Information</label><label style="display:block;margin:5px 0"><input type="checkbox" id="bigspy-use-web-research" <?php checked((bool)bsl_get('generator.web_research_enabled',0)); ?> <?php disabled(!bigspy_get_serper_key()); ?>> Use Google Web + Recent News Research <?php if(!bigspy_get_serper_key()): ?><span style="color:#b32d2e">(Configure the Web Research API Key in Settings — <a href="https://serper.dev/" target="_blank" rel="noopener noreferrer">get a key at serper.dev</a>)</span><?php endif; ?></label></div>
+            <div style="grid-column:1/-1;padding:12px;background:#fff8e5;border:1px solid #e0c36a;border-radius:6px"><strong>10. Research Sources</strong><p style="margin:6px 0 8px">Choose which external information the AI may use. Website Information is optional; Web Research uses Google web/news results and can still work when the partner website blocks direct crawling.</p><label style="display:block;margin:5px 0"><input type="checkbox" id="bigspy-use-website" checked> Use Website Information</label><label style="display:block;margin:5px 0"><input type="checkbox" id="bigspy-use-web-research" <?php checked((bool)bsl_get('generator.web_research_enabled',0)); ?> <?php disabled(!bigspy_get_serper_key()); ?>> Use Google Web + Recent News Research <?php if(!bigspy_get_serper_key()): ?><span style="color:#b32d2e">(Configure the Web Research API Key in Settings — <a href="https://serper.dev/" target="_blank" rel="noopener noreferrer">get a key at serper.dev</a>)</span><?php endif; ?></label></div>
             <div style="grid-column:1/-1;padding:12px;background:#f0f6fc;border:1px solid #c7d7e7;border-radius:6px">
-                <strong>8. Dynamic Listing Information</strong>
+                <strong>11. Dynamic Listing Information</strong>
                 <p style="margin:6px 0 0">The AI will detect whether this is a tool, product, travel site, service, course, hotel, or another type and will automatically create the most relevant <strong>Label → Value</strong> attributes. There are no fixed Pricing / Trial / Platform fields here.</p>
                 <label style="display:block;margin-top:8px"><strong>Maximum labels for this listing</strong></label>
                 <select id="bigspy-max-dynamic-labels" style="width:180px">
@@ -479,7 +485,7 @@ function bigspy_render_listing_box($post) {
                 </select>
             </div>
             <p style="margin:0">
-                <label><strong>8. AI Model</strong></label>
+                <label><strong>12. AI Model</strong></label>
                 <select id="bigspy-model" style="width:100%">
                     <?php foreach ($models as $id => $m): ?>
                         <option value="<?php echo esc_attr($id); ?>" <?php disabled(empty($m['verified'])); ?>>
@@ -621,6 +627,23 @@ function bigspy_render_listing_box($post) {
             finally { btn.disabled=false; loading.style.display='none'; }
         };
 
+        const modelSelect = document.getElementById('bigspy-model');
+        try { const lastModel = window.localStorage.getItem('bigspyListingModel'); if (lastModel && modelSelect.querySelector('option[value="'+CSS.escape(lastModel)+'"]:not([disabled])')) modelSelect.value = lastModel; } catch (error) {}
+        modelSelect.addEventListener('change', function(){ try { window.localStorage.setItem('bigspyListingModel', modelSelect.value); } catch (error) {} });
+        const duplicateNotice = document.getElementById('bigspy-duplicate-notice');
+        async function checkDuplicate(){
+            const url = document.getElementById('bigspy-tool-url').value || document.getElementById('bigspy-home-url').value;
+            if (!url) { duplicateNotice.style.display='none'; return; }
+            try {
+                const d = await call('bigspy_check_listing_duplicate',{url:url,post_id:<?php echo (int)$post->ID; ?>});
+                if (!d.matches || !d.matches.length) { duplicateNotice.style.display='none'; return; }
+                duplicateNotice.innerHTML = '<div class="notice notice-warning inline" style="margin:0"><p><strong>This website already has a listing.</strong> One product should have one listing; update the existing one instead: ' + d.matches.map(function(m){ return '<a href="'+esc(m.edit_url)+'">'+esc(m.title)+'</a> ('+esc(m.status)+')'; }).join(', ') + '</p></div>';
+                duplicateNotice.style.display='block';
+            } catch (error) { duplicateNotice.style.display='none'; }
+        }
+        document.getElementById('bigspy-tool-url').addEventListener('change', checkDuplicate);
+        document.getElementById('bigspy-home-url').addEventListener('change', checkDuplicate);
+
         document.getElementById('bigspy-list-now').onclick = async function(){
             saveInternalLinkHistory();
             const btn=this;
@@ -630,6 +653,8 @@ function bigspy_render_listing_box($post) {
                     post_id:<?php echo (int)$post->ID; ?>,
                     tool_url:document.getElementById('bigspy-tool-url').value,
                     home_url:document.getElementById('bigspy-home-url').value,
+                    pricing_url:document.getElementById('bigspy-pricing-url').value,
+                    category_ids:Array.from(document.getElementById('bigspy-category-ids').selectedOptions).map(function(o){return o.value;}).join(','),
                     affiliate_url:document.getElementById('bigspy-affiliate-url').value,
                     primary_keyword:document.getElementById('bigspy-primary-keyword').value,
                     secondary_keywords:document.getElementById('bigspy-secondary-keywords').value,
@@ -1134,6 +1159,8 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
 
     $tool=esc_url_raw(wp_unslash($_POST['tool_url']??''));
     $home=esc_url_raw(wp_unslash($_POST['home_url']??''));
+    $pricing_url=esc_url_raw(wp_unslash($_POST['pricing_url']??''));
+    $editor_category_ids=bigspy_editor_category_ids_from_request();
     $affiliate=esc_url_raw(wp_unslash($_POST['affiliate_url']??''));
     $primary=sanitize_text_field(wp_unslash($_POST['primary_keyword']??''));
     $secondary=sanitize_text_field(wp_unslash($_POST['secondary_keywords']??''));
@@ -1155,6 +1182,8 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
 
     if($use_website_information) $stage('Reading the website…');
     $source_text=$use_website_information ? bigspy_fetch_page_text($tool ?: $home) : '';
+    $pricing_text='';
+    if($pricing_url) { $stage('Reading the pricing page…'); $pricing_text=bigspy_fetch_page_text($pricing_url); }
     if($use_web_research) $stage('Searching Google web and news results…');
     $web_research=$use_web_research ? bigspy_build_web_research($tool,$home,$primary,$secondary,$short) : array();
     $existing_title = sanitize_text_field(get_the_title($post_id));
@@ -1182,6 +1211,8 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
         . wp_json_encode($input,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)
         . "\n\nSOURCE WEBSITE TEXT (reference only; do not copy verbatim and do not invent facts beyond it):\n"
         . ($source_text ?: '[Website Information was disabled or no source page text could be retrieved.]')
+        . "\n\nPRICING PAGE TEXT (" . ($pricing_url ?: 'none') . "; the most reliable source for prices, plan limits, trials and refunds):\n"
+        . ($pricing_text ?: '[No pricing page was supplied or it could not be read. Do not guess prices.]')
         . "\n\nWEB RESEARCH RESULTS (Google web/news snippets; use as current reference, verify consistency across sources, do not copy verbatim):\n"
         . bigspy_format_web_research($web_research)
         . "\n\nRequirements:\n"
@@ -1194,6 +1225,7 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
         . "7. secondary_keywords: when four secondary keywords are supplied by the user, return those exact four in the same order. Never replace them with invented keywords.\n"
         . "8. slug: lowercase URL slug containing the primary keyword when possible.\n"
         . "9. categories: return up to 5 relevant WooCommerce product category PATHS, not a flat list. Each path must use the exact delimiter \" > \" between hierarchy levels, for example \"Marketing > SEO > Technical SEO\". Use only 1 to 5 levels per path based on the natural breadth and specificity of the niche. Do not force every listing to five levels, do not create artificial levels, and never return more than 5 levels in a single path. If a listing belongs to multiple genuine branches, return multiple paths. Reuse logical category names consistently. EXISTING CATEGORIES on the site: " . ($existing_categories ? implode('; ', $existing_categories) : '[none yet]') . ". Reuse an existing path exactly whenever one fits the listing. Create a new path only when none fits, and never create a near-duplicate of an existing name (for example \"Travel & Tourism\" or \"Travel Services\" when \"Travel\" exists).\n"
+        . bigspy_category_rule_prompt($editor_category_ids) . "\n"
         . "10. tags: maximum 10 relevant WooCommerce product tags.\n"
         . "11. listing_type: identify the actual type of listing from the source. dynamic_attributes: create no more than the requested maximum number of the most useful label/value pairs for that type. Labels must be generated for the listing, not chosen from a fixed Pricing/Trial/Platform list. Only include facts supported by the source.
 12. company_name, pricing, pricing_type, starting_price, price_min, price_max, price_currency, price_unit, price_custom_text, free_trial, api_available, api_url, founded_year, key_features, pros, cons, integrations: populate these legacy/theme fields only when supported by the source. They remain for backward compatibility; they must not constrain dynamic_attributes. Never invent unsupported prices.\n"
@@ -1202,8 +1234,9 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
         . bigspy_content_brief_prompt($content_route,$customer_values) . "\n\n"
         . bigspy_editor_notes_prompt($editor_notes) . "\n\n"
         . bigspy_internal_links_prompt($link_candidates) . "\n\n"
+        . bigspy_facts_prompt() . "\n\n"
         . "Write everything in English. Only return valid JSON, no Markdown, using exactly this schema:\n"
-        . '{"title":"","short_description":"","description_html":"","seo_title":"","seo_description":"","slug":"","focus_keyword":"","secondary_keywords":[],"categories":[],"tags":[],"listing_type":"","dynamic_attributes":[],"company_name":"","pricing":"","pricing_type":"","starting_price":"","price_min":"","price_max":"","price_currency":"","price_unit":"","price_custom_text":"","free_trial":"","api_available":"","api_url":"","founded_year":"","key_features":[],"pros":[],"cons":[],"integrations":[],"best_for":[],"not_for":[],"getting_started":[]}';
+        . '{"title":"","short_description":"","description_html":"","seo_title":"","seo_description":"","slug":"","focus_keyword":"","secondary_keywords":[],"categories":[],"tags":[],"listing_type":"","dynamic_attributes":[],"company_name":"","pricing":"","pricing_type":"","starting_price":"","price_min":"","price_max":"","price_currency":"","price_unit":"","price_custom_text":"","free_trial":"","api_available":"","api_url":"","founded_year":"","key_features":[],"pros":[],"cons":[],"integrations":[],"best_for":[],"not_for":[],"getting_started":[],"facts":{}}';
 
     $stage('The AI is writing the listing. This usually takes 1 to 3 minutes…');
     $result=bigspy_call_ai([
@@ -1286,6 +1319,11 @@ add_action('wp_ajax_bigspy_generate_listing', function(){
     update_post_meta($post_id,'_bigspy_internal_links',$internal_links);
     update_post_meta($post_id,'_bigspy_content_route',$content_route);
     update_post_meta($post_id,'_bigspy_editor_notes',$editor_notes);
+    if($pricing_url) update_post_meta($post_id,'_bigspy_pricing_url',$pricing_url);
+    if(!empty($data['facts']) && is_array($data['facts'])) {
+        update_post_meta($post_id,'_bigspy_facts',bigspy_clean_facts($data['facts']));
+        // AI-read facts are not "checked" yet: the editor confirms them in the Listing facts box.
+    }
     update_post_meta($post_id,'_bigspy_customer_values',$customer_values);
     foreach(array('best_for'=>4,'not_for'=>3,'getting_started'=>5) as $brief_key=>$brief_max) {
         $brief_items=array_slice(array_values(array_filter(array_map('sanitize_text_field',(array)($data[$brief_key]??array())))),0,$brief_max);
@@ -1530,7 +1568,16 @@ function bigspy_resolve_product_category_paths($raw_categories, $max_depth = 5) 
         'errors' => array(),
     );
     if(taxonomy_exists('product_cat')) {
-        $category_result = bigspy_resolve_product_category_paths($data['categories'] ?? array(), 5);
+        if($editor_category_ids) {
+            $category_result['term_ids'] = $editor_category_ids;
+        } elseif(bigspy_categories_locked()) {
+            $category_match = bigspy_match_existing_categories($data['categories'] ?? array());
+            $category_result['term_ids'] = $category_match['term_ids'];
+            $category_result['paths'] = $category_match['paths'];
+            if($category_match['unmatched']) $category_result['errors'][] = 'Not an existing category, left out: '.implode('; ', $category_match['unmatched']).'. Pick a category on the listing.';
+        } else {
+            $category_result = bigspy_resolve_product_category_paths($data['categories'] ?? array(), 5);
+        }
         if(!empty($category_result['term_ids'])) {
             // Assign every resolved level (parent + child + deeper descendants) so the
             // product edit screen explicitly checks the complete category chain.

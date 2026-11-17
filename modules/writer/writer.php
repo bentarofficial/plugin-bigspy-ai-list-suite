@@ -57,14 +57,13 @@ function bigspy_pw_render_meta_box($post) {
     wp_nonce_field('bigspy_pw_meta_box', 'bigspy_pw_meta_nonce');
     $external = bigspy_pw_saved_rows($post->ID, '_bigspy_pw_external_anchors');
     $internal = bigspy_pw_saved_rows($post->ID, '_bigspy_pw_internal_anchors');
-    if (!$internal && function_exists('bigspy_internal_link_history_get')) {
-        $internal = array_map(function($row) {
-            return array('name'=>(string)($row['label'] ?? ''), 'url'=>(string)($row['url'] ?? ''));
-        }, bigspy_internal_link_history_get());
-    }
     $description = (string)get_post_meta($post->ID, '_bigspy_pw_description', true);
     $word_count = max(500, min(5000, absint(get_post_meta($post->ID, '_bigspy_pw_word_count', true) ?: 1500)));
     $saved_model = (string)get_post_meta($post->ID, '_bigspy_pw_model', true);
+    if ($saved_model === '') $saved_model = (string)get_user_meta(get_current_user_id(), 'bigspy_pw_last_model', true);
+    $editor_notes = (string)get_post_meta($post->ID, '_bigspy_pw_notes', true);
+    $focus_input = (string)get_post_meta($post->ID, '_bigspy_pw_focus', true);
+    $listing_choices = bigspy_pw_listing_choices();
     $models = bigspy_pw_models();
     $configured = bigspy_pw_ready() && bigspy_get_url() && bigspy_get_key();
     $research = function_exists('bigspy_get_serper_key') && bigspy_get_serper_key() !== '';
@@ -75,11 +74,11 @@ function bigspy_pw_render_meta_box($post) {
 
       <div class="bigspy-pw-panel" data-type="external">
         <h3>1. External Anchors</h3>
-        <p>Enter the exact tool, product, service, or website name and its destination URL. The name is used as the link anchor.</p>
+        <p>Start typing a listed product to fill its URLs. The name is used as the link anchor.</p><datalist id="bigspy-pw-listings"><?php foreach ($listing_choices as $choice): ?><option value="<?php echo esc_attr($choice['name']); ?>"></option><?php endforeach; ?></datalist>
         <div class="bigspy-pw-rows">
           <?php $rows = $external ?: array(array()); foreach ($rows as $row): ?>
             <div class="bigspy-pw-row">
-              <input type="text" class="bigspy-pw-name" placeholder="Tool, product or website name" value="<?php echo esc_attr($row['name'] ?? ''); ?>">
+              <input type="text" class="bigspy-pw-name" list="bigspy-pw-listings" autocomplete="off" placeholder="Tool, product or website name" value="<?php echo esc_attr($row['name'] ?? ''); ?>">
               <input type="url" class="bigspy-pw-url" placeholder="https://example.com/" value="<?php echo esc_attr($row['url'] ?? ''); ?>">
               <input type="url" class="bigspy-pw-affiliate" placeholder="Affiliate URL (optional)" value="<?php echo esc_attr($row['affiliate_url'] ?? ''); ?>">
               <label><input type="checkbox" class="bigspy-pw-sponsored" <?php checked(!empty($row['sponsored'])); ?>> Sponsored</label>
@@ -92,7 +91,7 @@ function bigspy_pw_render_meta_box($post) {
 
       <div class="bigspy-pw-panel" data-type="internal">
         <h3>2. Internal Anchors</h3>
-        <p>Optional links to existing articles, listings, categories, or pages on this site.</p>
+        <p>Optional. Related listings, categories and posts are linked automatically; add a row only to force a specific link.</p>
         <div class="bigspy-pw-rows">
           <?php $rows = $internal ?: array(array()); foreach ($rows as $row): ?>
             <div class="bigspy-pw-row">
@@ -105,7 +104,7 @@ function bigspy_pw_render_meta_box($post) {
         <button type="button" class="button bigspy-pw-add">Add Internal Anchor</button>
         <datalist id="bigspy-pw-internal-name-history"></datalist>
         <datalist id="bigspy-pw-internal-url-history"></datalist>
-        <p class="description">Internal anchors typed here are saved automatically and filled into the next new post. Remove a row to drop that link.</p>
+        <p class="description">Links typed here are remembered as suggestions.</p>
       </div>
 
       <?php $pw_route = function_exists('bigspy_sanitize_post_route') ? bigspy_sanitize_post_route(get_post_meta($post->ID, '_bigspy_pw_route', true)) : 'guide'; ?>
@@ -114,9 +113,11 @@ function bigspy_pw_render_meta_box($post) {
       <fieldset style="margin:0 0 14px"><legend style="font-weight:600;margin-bottom:4px">4. Value for the reader</legend><?php bigspy_render_customer_values_field(is_array($pw_values) ? $pw_values : null); ?></fieldset>
       <?php endif; ?>
       <p><label for="bigspy-pw-description"><strong>5. Describe the Article You Want</strong></label><textarea id="bigspy-pw-description" rows="6" style="width:100%" placeholder="Describe the article in English: purpose, audience, angle, and information to cover."><?php echo esc_textarea($description); ?></textarea><span class="description">Write the brief in English. The generated title, excerpt, article, taxonomy, and SEO metadata are always English, even if the brief contains another language.</span></p>
+      <p><label for="bigspy-pw-notes"><strong>6. Editor notes: what you saw when you tried it</strong></label><textarea id="bigspy-pw-notes" rows="3" style="width:100%" placeholder="Optional, strongly recommended. First-hand findings only: what you tested, the result, what failed."><?php echo esc_textarea($editor_notes); ?></textarea><span class="description">Without notes the AI never claims hands-on testing.</span></p>
+      <p><label for="bigspy-pw-focus"><strong>7. Focus keyword</strong></label><input id="bigspy-pw-focus" type="text" style="width:100%" placeholder="Optional: the search phrase you researched, e.g. &quot;ai video ad generator for shopify&quot;" value="<?php echo esc_attr($focus_input); ?>"><span class="description">Leave empty and the AI chooses one.</span></p>
       <div style="display:grid;grid-template-columns:minmax(180px,260px) minmax(220px,1fr);gap:18px;align-items:end">
         <input id="bigspy-pw-word-count" type="hidden" value="<?php echo esc_attr($word_count); ?>">
-        <p><label for="bigspy-pw-model"><strong>6. AI Model</strong></label><br><select id="bigspy-pw-model" style="width:100%"><option value="">Select a model</option><?php foreach ($models as $id=>$model): ?><option value="<?php echo esc_attr($id); ?>" <?php selected($saved_model, $id); ?>><?php echo esc_html(is_array($model) ? ($model['label'] ?? $id) : $id); ?></option><?php endforeach; ?></select></p>
+        <p><label for="bigspy-pw-model"><strong>8. AI Model</strong></label><br><select id="bigspy-pw-model" style="width:100%"><option value="">Select a model</option><?php foreach ($models as $id=>$model): ?><option value="<?php echo esc_attr($id); ?>" <?php selected($saved_model, $id); ?>><?php echo esc_html(is_array($model) ? ($model['label'] ?? $id) : $id); ?></option><?php endforeach; ?></select></p>
       </div>
       <p><button type="button" id="bigspy-pw-generate" class="button button-primary button-large" <?php disabled(!$configured); ?>>Write Article Draft</button></p>
       <div id="bigspy-pw-status" aria-live="polite"></div>
@@ -127,12 +128,17 @@ function bigspy_pw_render_meta_box($post) {
     <script>
     jQuery(function($){
       const box=$('#bigspy-pw-box'), status=$('#bigspy-pw-status');
-      function row(type){return type==='external'?'<div class="bigspy-pw-row"><input type="text" class="bigspy-pw-name" placeholder="Tool, product or website name"><input type="url" class="bigspy-pw-url" placeholder="https://example.com/"><input type="url" class="bigspy-pw-affiliate" placeholder="Affiliate URL (optional)"><label><input type="checkbox" class="bigspy-pw-sponsored"> Sponsored</label><button type="button" class="button bigspy-pw-remove">Remove</button></div>':'<div class="bigspy-pw-row"><input type="text" class="bigspy-pw-name" list="bigspy-pw-internal-name-history" autocomplete="off" placeholder="Internal anchor text"><input type="url" class="bigspy-pw-url" list="bigspy-pw-internal-url-history" autocomplete="off" placeholder="<?php echo esc_js(home_url('/') ); ?>"><button type="button" class="button bigspy-pw-remove">Remove</button></div>'}
+      function row(type){return type==='external'?'<div class="bigspy-pw-row"><input type="text" class="bigspy-pw-name" list="bigspy-pw-listings" autocomplete="off" placeholder="Tool, product or website name"><input type="url" class="bigspy-pw-url" placeholder="https://example.com/"><input type="url" class="bigspy-pw-affiliate" placeholder="Affiliate URL (optional)"><label><input type="checkbox" class="bigspy-pw-sponsored"> Sponsored</label><button type="button" class="button bigspy-pw-remove">Remove</button></div>':'<div class="bigspy-pw-row"><input type="text" class="bigspy-pw-name" list="bigspy-pw-internal-name-history" autocomplete="off" placeholder="Internal anchor text"><input type="url" class="bigspy-pw-url" list="bigspy-pw-internal-url-history" autocomplete="off" placeholder="<?php echo esc_js(home_url('/') ); ?>"><button type="button" class="button bigspy-pw-remove">Remove</button></div>'}
+      const listings=<?php echo wp_json_encode($listing_choices); ?>;
+      box.on('input change','.bigspy-pw-panel[data-type="external"] .bigspy-pw-name',function(){const r=$(this).closest('.bigspy-pw-row'),m=listings.find(function(x){return x.name===this.value}.bind(this));if(!m)return;if(!r.find('.bigspy-pw-url').val())r.find('.bigspy-pw-url').val(m.url);if(!r.find('.bigspy-pw-affiliate').val()&&m.affiliate)r.find('.bigspy-pw-affiliate').val(m.affiliate);if(m.affiliate)r.find('.bigspy-pw-sponsored').prop('checked',true)});
+      const hints=<?php echo wp_json_encode(array_map(function($r){return $r['hint']??'';}, function_exists('bigspy_post_routes') ? bigspy_post_routes() : array())); ?>;
+      function hint(){const h=hints[$('#bigspy-pw-route').val()];if(h)$('#bigspy-pw-description').attr('placeholder','What to include: '+h)}
+      $('#bigspy-pw-route').on('change',hint);hint();
       box.on('click','.bigspy-pw-add',function(){const panel=$(this).closest('.bigspy-pw-panel'),max=panel.data('type')==='external'?20:8;if(panel.find('.bigspy-pw-row').length>=max)return;panel.find('.bigspy-pw-rows').append(row(panel.data('type')))});
       box.on('click','.bigspy-pw-remove',function(){const rows=$(this).closest('.bigspy-pw-rows');$(this).closest('.bigspy-pw-row').remove();if(!rows.children().length)rows.append(row(rows.closest('.bigspy-pw-panel').data('type')))});
       function collect(type){const out=[];box.find('.bigspy-pw-panel[data-type="'+type+'"] .bigspy-pw-row').each(function(){const r=$(this),name=r.find('.bigspy-pw-name').val().trim(),url=r.find('.bigspy-pw-url').val().trim();if(name&&url){const item={name:name,url:url};if(type==='external'){item.affiliate_url=r.find('.bigspy-pw-affiliate').val().trim();item.sponsored=r.find('.bigspy-pw-sponsored').is(':checked')?1:0}out.push(item)}});return out}
       function msg(text,ok){status.html('<div style="margin-top:10px;padding:10px;border-left:4px solid '+(ok?'#00a32a':'#d63638')+';background:#f6f7f7">'+$('<div>').text(text).html()+'</div>')}
-      $('#bigspy-pw-generate').on('click',function(){const btn=$(this),description=$('#bigspy-pw-description').val().trim(),model=$('#bigspy-pw-model').val();if(!description)return msg('Please describe the article you want.',false);if(!model)return msg('Please select an AI model.',false);btn.prop('disabled',true);msg('Starting the background article job...',true);$.post(ajaxurl,{action:'bigspy_pw_generate',nonce:'<?php echo esc_js(wp_create_nonce('bigspy_pw_generate')); ?>',post_id:<?php echo (int)$post->ID; ?>,description:description,content_route:$('#bigspy-pw-route').val(),customer_values:box.find('.bigspy-customer-value:checked').map(function(){return this.value}).get().join(','),word_count:$('#bigspy-pw-word-count').val(),model:model,external:JSON.stringify(collect('external')),internal:JSON.stringify(collect('internal'))}).done(function(resp){if(!resp||!resp.success){btn.prop('disabled',false);return msg(resp&&resp.data&&resp.data.message?resp.data.message:'Could not start the article job.',false)}const job=resp.data.job_id,targetPostId=resp.data.post_id;msg(resp.data.message,true);$.post(ajaxurl,{action:'bigspy_pw_background',nonce:resp.data.background_nonce,job_id:job,post_id:targetPostId,description:description,content_route:$('#bigspy-pw-route').val(),customer_values:box.find('.bigspy-customer-value:checked').map(function(){return this.value}).get().join(','),word_count:$('#bigspy-pw-word-count').val(),model:model,external:JSON.stringify(collect('external')),internal:JSON.stringify(collect('internal'))});let tries=0;const timer=setInterval(function(){tries++;$.post(ajaxurl,{action:'bigspy_pw_status',nonce:'<?php echo esc_js(wp_create_nonce('bigspy_pw_generate')); ?>',post_id:targetPostId,job_id:job}).done(function(s){if(!s||!s.success)return;if(s.data.state==='done'){clearInterval(timer);btn.prop('disabled',false);msg('Article draft created.',true);if(s.data.edit_url)status.append('<p><a class="button button-primary" href="'+$('<div>').text(s.data.edit_url).html()+'">View and edit new post</a></p>')}else if(s.data.state==='error'){clearInterval(timer);btn.prop('disabled',false);msg(s.data.message||'Article generation failed.',false)}else msg(s.data.message||'Researching and writing the article...',true)});if(tries>=180){clearInterval(timer);btn.prop('disabled',false);msg('The job is still running. Return later to see the result.',false)}},2000)}).fail(function(){btn.prop('disabled',false);msg('Could not connect to WordPress AJAX.',false)})});
+      $('#bigspy-pw-generate').on('click',function(){const btn=$(this),description=$('#bigspy-pw-description').val().trim(),model=$('#bigspy-pw-model').val();if(!description)return msg('Please describe the article you want.',false);if(!model)return msg('Please select an AI model.',false);btn.prop('disabled',true);msg('Starting the background article job...',true);const confirmDup=btn.data('confirm-dup')?'1':'';btn.data('confirm-dup','');$.post(ajaxurl,{action:'bigspy_pw_generate',confirm_duplicate:confirmDup,nonce:'<?php echo esc_js(wp_create_nonce('bigspy_pw_generate')); ?>',post_id:<?php echo (int)$post->ID; ?>,description:description,content_route:$('#bigspy-pw-route').val(),editor_notes:$('#bigspy-pw-notes').val(),focus_input:$('#bigspy-pw-focus').val(),customer_values:box.find('.bigspy-customer-value:checked').map(function(){return this.value}).get().join(','),word_count:$('#bigspy-pw-word-count').val(),model:model,external:JSON.stringify(collect('external')),internal:JSON.stringify(collect('internal'))}).done(function(resp){if(resp&&!resp.success&&resp.data&&resp.data.duplicate){btn.prop('disabled',false);if(window.confirm(resp.data.message)){btn.data('confirm-dup',1);btn.trigger('click')}return msg(resp.data.message,false)}if(!resp||!resp.success){btn.prop('disabled',false);return msg(resp&&resp.data&&resp.data.message?resp.data.message:'Could not start the article job.',false)}const job=resp.data.job_id,targetPostId=resp.data.post_id;msg(resp.data.message,true);$.post(ajaxurl,{action:'bigspy_pw_background',nonce:resp.data.background_nonce,job_id:job,post_id:targetPostId,description:description,content_route:$('#bigspy-pw-route').val(),editor_notes:$('#bigspy-pw-notes').val(),focus_input:$('#bigspy-pw-focus').val(),customer_values:box.find('.bigspy-customer-value:checked').map(function(){return this.value}).get().join(','),word_count:$('#bigspy-pw-word-count').val(),model:model,external:JSON.stringify(collect('external')),internal:JSON.stringify(collect('internal'))});let tries=0;const timer=setInterval(function(){tries++;$.post(ajaxurl,{action:'bigspy_pw_status',nonce:'<?php echo esc_js(wp_create_nonce('bigspy_pw_generate')); ?>',post_id:targetPostId,job_id:job}).done(function(s){if(!s||!s.success)return;if(s.data.state==='done'){clearInterval(timer);btn.prop('disabled',false);msg('Article draft created.',true);if(s.data.edit_url)status.append('<p><a class="button button-primary" href="'+$('<div>').text(s.data.edit_url).html()+'">View and edit new post</a></p>')}else if(s.data.state==='error'){clearInterval(timer);btn.prop('disabled',false);msg(s.data.message||'Article generation failed.',false)}else msg(s.data.message||'Researching and writing the article...',true)});if(tries>=180){clearInterval(timer);btn.prop('disabled',false);msg('The job is still running. Return later to see the result.',false)}},2000)}).fail(function(){btn.prop('disabled',false);msg('Could not connect to WordPress AJAX.',false)})});
     });
     </script>
     <?php
@@ -218,6 +224,14 @@ function bigspy_pw_ajax_generate() {
     if (!current_user_can('edit_post', $post_id)) wp_send_json_error(array('message'=>'You cannot edit this post.'));
     $external = bigspy_pw_sanitize_rows($_POST['external'] ?? '[]', true);
     $internal = bigspy_pw_sanitize_rows($_POST['internal'] ?? '[]', false);
+    $route_key = bigspy_sanitize_post_route(wp_unslash($_POST['content_route'] ?? ''));
+    if (empty($_POST['confirm_duplicate'])) {
+        $same = bigspy_pw_same_route_posts($route_key, $external, $post_id);
+        if ($same) wp_send_json_error(array('duplicate'=>true, 'message'=>'There is already a '.bigspy_post_routes()[$route_key]['label'].' article about the same product: "'.implode('", "', $same).'". Write another one anyway?'));
+    }
+    update_user_meta(get_current_user_id(), 'bigspy_pw_last_model', $model);
+    update_post_meta($post_id, '_bigspy_pw_notes', sanitize_textarea_field(wp_unslash($_POST['editor_notes'] ?? '')));
+    update_post_meta($post_id, '_bigspy_pw_focus', sanitize_text_field(wp_unslash($_POST['focus_input'] ?? '')));
     update_post_meta($post_id, '_bigspy_pw_description', $description);
     update_post_meta($post_id, '_bigspy_pw_word_count', $word_count);
     update_post_meta($post_id, '_bigspy_pw_route', bigspy_sanitize_post_route(wp_unslash($_POST['content_route'] ?? '')));
@@ -272,6 +286,10 @@ function bigspy_pw_ajax_background() {
     $route = bigspy_sanitize_post_route(wp_unslash($_POST['content_route'] ?? ''));
     $candidates = bigspy_internal_link_candidates($post_id);
     $values = bigspy_sanitize_customer_values(wp_unslash($_POST['customer_values'] ?? ''));
+    $notes = sanitize_textarea_field(wp_unslash($_POST['editor_notes'] ?? ''));
+    $focus_input = sanitize_text_field(wp_unslash($_POST['focus_input'] ?? ''));
+    $description .= "\n\n".bigspy_editor_notes_prompt($notes);
+    if ($focus_input !== '') $description .= "\n\nFOCUS KEYWORD (researched by the editor; use it exactly as focus_keyword, in the title, the opening and one H2): ".$focus_input;
     bigspy_pw_set_status($job_id,array('state'=>'running','message'=>'Researching Google results and writing the article...','post_id'=>$post_id));
     try {
         $research = bigspy_pw_research($description,$external);
@@ -294,7 +312,7 @@ function bigspy_pw_ajax_background() {
         $category_ids = bigspy_pw_term_ids($data['categories']??array(),'category',2);
         if ($category_ids) { wp_set_post_categories($post_id,$category_ids,false); update_post_meta($post_id,'rank_math_primary_category',$category_ids[0]); }
         $tag_ids = bigspy_pw_term_ids($data['tags']??array(),'post_tag',8); if ($tag_ids) wp_set_post_terms($post_id,$tag_ids,'post_tag',false);
-        $focus = bigspy_pw_clip($data['focus_keyword']??'',100); $secondary = array_slice(array_unique(array_filter(array_map('sanitize_text_field',(array)($data['secondary_keywords']??array())))),0,4);
+        $focus = $focus_input !== '' ? bigspy_pw_clip($focus_input,100) : bigspy_pw_clip($data['focus_keyword']??'',100); $secondary = array_slice(array_unique(array_filter(array_map('sanitize_text_field',(array)($data['secondary_keywords']??array())))),0,4);
         $keywords = array_values(array_unique(array_filter(array_merge(array($focus),$secondary))));
         update_post_meta($post_id,'rank_math_focus_keyword',implode(', ',$keywords));
         update_post_meta($post_id,'rank_math_title',bigspy_pw_clip($data['seo_title']??$title,60));
@@ -354,3 +372,35 @@ function bigspy_pw_media_script() {
     <script>jQuery(document).on('click','.bigspy-media-generate',function(e){e.preventDefault();const $=jQuery,b=$(this),id=b.data('id'),row=b.closest('.compat-item'),status=b.siblings('.bigspy-media-status'),keyword=(row.find('[name="attachments['+id+'][bigspy_media_keyword]"]').val()||'').trim(),context=(row.find('[name="attachments['+id+'][bigspy_media_context]"]').val()||'').trim(),model=row.find('[name="attachments['+id+'][bigspy_media_model]"]').val()||'';if(!keyword){status.css('color','#b32d2e').text('Enter the primary keyword.');return}if(!context){status.css('color','#b32d2e').text('Enter a short image description.');return}if(!model){status.css('color','#b32d2e').text('Select a model.');return}b.prop('disabled',true);status.css('color','#646970').text('Generating English image metadata...');$.post(ajaxurl,{action:'bigspy_pw_media_generate',nonce:'<?php echo esc_js(wp_create_nonce('bigspy_pw_media')); ?>',attachment_id:id,keyword:keyword,context:context,model:model}).done(function(r){if(r&&r.success){status.css('color','#008000').text('Image SEO metadata created.');if(window.wp&&wp.media)wp.media.model.Attachment.get(id).fetch()}else status.css('color','#b32d2e').text(r&&r.data&&r.data.message?r.data.message:'Generation failed.');}).fail(function(){status.css('color','#b32d2e').text('Connection failed.');}).always(function(){b.prop('disabled',false)})});</script>
 <?php }
 add_action('admin_footer','bigspy_pw_media_script');
+
+/** Published listings for the External Anchors picker: name, website URL, affiliate URL. */
+function bigspy_pw_listing_choices() {
+    if (!post_type_exists('product')) return array();
+    $out = array();
+    foreach (get_posts(array('post_type'=>'product','post_status'=>'publish','numberposts'=>500,'fields'=>'ids','orderby'=>'title','order'=>'ASC','no_found_rows'=>true)) as $id) {
+        $url = (string)get_post_meta($id, '_bigspy_tool_url', true);
+        if ($url === '') $url = (string)get_post_meta($id, '_bigspy_home_url', true);
+        if ($url === '') continue;
+        $out[] = array('name'=>html_entity_decode(get_the_title($id), ENT_QUOTES, 'UTF-8'), 'url'=>esc_url_raw($url), 'affiliate'=>esc_url_raw((string)get_post_meta($id, '_bigspy_affiliate_url', true)));
+    }
+    return $out;
+}
+
+/** Titles of other posts on the same route that link the same product websites. */
+function bigspy_pw_same_route_posts($route, array $external, $post_id) {
+    $hosts = array();
+    foreach ($external as $row) {
+        $host = preg_replace('/^www\./', '', strtolower((string)wp_parse_url($row['url'] ?? '', PHP_URL_HOST)));
+        if ($host !== '') $hosts[] = $host;
+    }
+    if (!$hosts) return array();
+    $ids = get_posts(array('post_type'=>'post','post_status'=>array('publish','draft','pending','future'),'numberposts'=>50,'fields'=>'ids','exclude'=>array((int)$post_id),'no_found_rows'=>true,'meta_key'=>'_bigspy_pw_route','meta_value'=>$route));
+    $out = array();
+    foreach ($ids as $id) {
+        foreach ((array)get_post_meta($id, '_bigspy_pw_external_anchors', true) as $row) {
+            $host = preg_replace('/^www\./', '', strtolower((string)wp_parse_url(is_array($row) ? ($row['url'] ?? '') : '', PHP_URL_HOST)));
+            if ($host !== '' && in_array($host, $hosts, true)) { $out[] = get_the_title($id); break; }
+        }
+    }
+    return array_slice(array_unique($out), 0, 3);
+}
