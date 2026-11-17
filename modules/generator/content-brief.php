@@ -216,15 +216,15 @@ function bigspy_strip_unknown_internal_links( $html, array $allowed_urls ) {
 /** Content routes for a blog post. Comparison (X vs Y) is left out on purpose. */
 function bigspy_post_routes() {
 	$routes = array(
-		'guide'        => array( 'label' => 'Guide', 'question' => 'What do I need to understand about this topic?', 'prompt' => 'Explain the topic for someone new to it, then show how the supplied tools fit in.' ),
-		'best_list'    => array( 'label' => 'Best List', 'question' => 'Which products should I consider for this job?', 'prompt' => 'Open with the job to be done and the criteria that matter. Give each supplied product its own section: what it does well, who it suits, who it does not suit, and how to start. Do not number them as a ranking and do not declare an overall winner.' ),
-		'tutorial'     => array( 'label' => 'Tutorial', 'question' => 'How do I get this job done?', 'prompt' => 'Lead with the outcome, list what is needed, then give numbered steps to a finished result, with common mistakes and how to check the result.' ),
-		'pricing'      => array( 'label' => 'Pricing', 'question' => 'How much will I pay and which plan is enough?', 'prompt' => 'Explain the plans, limits, renewal and overage costs and refund terms from the research, and say which plan suits which user. Use only prices found in the research and say when they were checked.' ),
-		'trial'        => array( 'label' => 'Trial & Demo', 'question' => 'What should I check before I pay?', 'prompt' => 'Explain what the free plan, trial or demo includes and give a checklist of what to test before paying.' ),
-		'offers'       => array( 'label' => 'Offers & Deals', 'question' => 'Is there a real offer and does it apply to me?', 'prompt' => 'Cover only offers confirmed by the research, with exact conditions, who qualifies and the end date. Say so plainly when an offer cannot be confirmed.' ),
-		'alternatives' => array( 'label' => 'Alternatives by need', 'question' => 'What else solves this need?', 'prompt' => 'Organize by reader need ("if you need X"), not by brand. Present each supplied product on its own merits and never describe another product as worse.' ),
-		'testing'      => array( 'label' => 'Case Study & Testing', 'question' => 'What results does it produce and where are the limits?', 'prompt' => 'Organize around documented results and their conditions and limits. Present a result as tested by this site only when the article request describes that test.' ),
-		'migration'    => array( 'label' => 'Migration', 'question' => 'How do I move to the new system and what do I check?', 'prompt' => 'Give a before, during and after checklist for switching: what to export, what breaks, how to verify, and how to roll back.' ),
+		'guide'        => array( 'words' => array( 1200, 1800 ), 'label' => 'Guide', 'question' => 'What do I need to understand about this topic?', 'prompt' => 'Explain the topic for someone new to it, then show how the supplied tools fit in.' ),
+		'best_list'    => array( 'words' => array( 1800, 2500 ), 'label' => 'Best List', 'question' => 'Which products should I consider for this job?', 'prompt' => 'Open with the job to be done and the criteria that matter. Give each supplied product its own section: what it does well, who it suits, who it does not suit, and how to start. Do not number them as a ranking and do not declare an overall winner.' ),
+		'tutorial'     => array( 'words' => array( 1200, 1800 ), 'label' => 'Tutorial', 'question' => 'How do I get this job done?', 'prompt' => 'Lead with the outcome, list what is needed, then give numbered steps to a finished result, with common mistakes and how to check the result.' ),
+		'pricing'      => array( 'words' => array( 800, 1200 ), 'label' => 'Pricing', 'question' => 'How much will I pay and which plan is enough?', 'prompt' => 'Explain the plans, limits, renewal and overage costs and refund terms from the research, and say which plan suits which user. Use only prices found in the research and say when they were checked.' ),
+		'trial'        => array( 'words' => array( 800, 1200 ), 'label' => 'Trial & Demo', 'question' => 'What should I check before I pay?', 'prompt' => 'Explain what the free plan, trial or demo includes and give a checklist of what to test before paying.' ),
+		'offers'       => array( 'words' => array( 600, 900 ), 'label' => 'Offers & Deals', 'question' => 'Is there a real offer and does it apply to me?', 'prompt' => 'Cover only offers confirmed by the research, with exact conditions, who qualifies and the end date. Say so plainly when an offer cannot be confirmed.' ),
+		'alternatives' => array( 'words' => array( 1500, 2200 ), 'label' => 'Alternatives by need', 'question' => 'What else solves this need?', 'prompt' => 'Organize by reader need ("if you need X"), not by brand. Present each supplied product on its own merits and never describe another product as worse.' ),
+		'testing'      => array( 'words' => array( 1200, 1800 ), 'label' => 'Case Study & Testing', 'question' => 'What results does it produce and where are the limits?', 'prompt' => 'Organize around documented results and their conditions and limits. Present a result as tested by this site only when the article request describes that test.' ),
+		'migration'    => array( 'words' => array( 1200, 1800 ), 'label' => 'Migration', 'question' => 'How do I move to the new system and what do I check?', 'prompt' => 'Give a before, during and after checklist for switching: what to export, what breaks, how to verify, and how to roll back.' ),
 	);
 	return apply_filters( 'bigspy_post_routes', $routes );
 }
@@ -251,4 +251,13 @@ function bigspy_post_brief_prompt( $route, $values = null ) {
 		}
 	}
 	return $out;
+}
+
+/** Recommended length of a post on a route: array( min, max, target ). */
+function bigspy_post_route_words( $route ) {
+	$routes = bigspy_post_routes();
+	$words  = $routes[ $route ]['words'] ?? array( 1200, 1800 );
+	$min    = max( 300, (int) ( $words[0] ?? 1200 ) );
+	$max    = max( $min, (int) ( $words[1] ?? 1800 ) );
+	return array( $min, $max, (int) round( ( $min + $max ) / 2, -2 ) );
 }
