@@ -2,7 +2,7 @@
 Contributors: bentar
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 License: GPL-2.0-or-later
 
 AI listing generator, post writer and site insights for directory websites.
@@ -16,6 +16,15 @@ With BIGSPY AI Theme WP it uses the theme's AI Designer key, so the key is enter
 Updates come from GitHub Releases in the WordPress dashboard.
 
 == Changelog ==
+
+= 1.3.0 =
+* Write post: choose the article type (Guide, Best List, Tutorial, Pricing, Trial & Demo, Offers & Deals, Alternatives by need, Case Study & Testing, Migration). Each type shows its recommended length, and the length follows the type, so there is no word count to enter.
+* Write post: choose the value the article must give the reader (discover a solution, plain-language explanation, selection criteria, risks and who it is not for, what to do after signing up).
+* Write post: no keyword density target and no "X vs Y" framing.
+* Create listing: a listing is always the full profile of one product. New Editor notes field for first-hand findings; without notes the AI never claims hands-on testing.
+* Create listing: length follows the evidence (700-1,500 words) instead of a fixed 2,000 words, and filler is not allowed. Specific limits, renewal pricing and "who it is not for" are required.
+* Listings and posts: published listings, their categories and posts are offered to the AI as internal links, and links to this site outside that list are removed. A listing may link up to 3 sources from the web research results.
+* Note: a custom System prompt saved in the settings replaces the built-in listing prompt, including the new length rules.
 
 = 1.2.1 =
 * Settings: a link to serper.dev under the Serper key field, and in the Listing Generator notice when the key is missing, so you know where to get the Web Research key.
