@@ -86,11 +86,20 @@ add_action(
 	}
 );
 
+// Customizer quick-edit label (BIGSPY AI Theme WP): hovering the badge links to its settings.
+add_filter(
+	'bst_customize_focus_map',
+	function ( $map ) {
+		$map[] = array( 'selector' => '.bsl-badge', 'type' => 'url', 'id' => admin_url( 'admin.php?page=' . BSL_PAGE . '#bsl-badge' ), 'label' => __( 'Badge settings', 'bigspy-ai-list-suite' ) );
+		return $map;
+	}
+);
+
 // Settings: heading and top label of the badge.
 add_action(
 	'bsl_settings_sections',
 	function ( $s ) {
-		echo '<h2>' . esc_html__( 'Embed badge', 'bigspy-ai-list-suite' ) . '</h2><table class="form-table" role="presentation">';
+		echo '<h2 id="bsl-badge">' . esc_html__( 'Embed badge', 'bigspy-ai-list-suite' ) . '</h2><table class="form-table" role="presentation">';
 		echo '<tr><th scope="row"><label for="bsl-badge-heading">' . esc_html__( 'Section heading', 'bigspy-ai-list-suite' ) . '</label></th><td><input type="text" class="regular-text" id="bsl-badge-heading" name="bsl[badge][heading]" value="' . esc_attr( $s['badge']['heading'] ?? '' ) . '"></td></tr>';
 		echo '<tr><th scope="row"><label for="bsl-badge-label">' . esc_html__( 'Badge top label', 'bigspy-ai-list-suite' ) . '</label></th><td><input type="text" class="regular-text" id="bsl-badge-label" name="bsl[badge][label]" value="' . esc_attr( $s['badge']['label'] ?? '' ) . '"><p class="description">' . esc_html__( 'Shown above the site name, for example "Featured on". The badge uses the Site Icon as its logo.', 'bigspy-ai-list-suite' ) . '</p></td></tr></table>';
 	}

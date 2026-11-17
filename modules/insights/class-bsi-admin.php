@@ -24,7 +24,7 @@ class BSI_Admin {
 		$name   = 'bsl[insights]';
 		$notice = isset( $_GET['bsi_done'] ) ? sanitize_text_field( wp_unslash( $_GET['bsi_done'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 		?>
-		<h2>Site Insights</h2>
+		<h2 id="bsl-insights">Site Insights</h2>
 			<?php if ( '' !== $notice ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php echo esc_html( $notice ); ?></p></div>
 			<?php endif; ?>

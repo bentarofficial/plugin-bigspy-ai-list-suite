@@ -108,3 +108,16 @@ add_filter( 'block_categories_all', function ( $categories ) {
 	$categories[] = array( 'slug' => 'bigspy-list', 'title' => __( 'BIGSPY AI List', 'bigspy-ai-list-suite' ), 'icon' => null );
 	return $categories;
 }, 30 );
+
+// Customizer quick-edit labels (BIGSPY AI Theme WP): hovering the Insights block links to the
+// module settings and, on a listing page, to that listing's Insights data (domain, manual numbers).
+add_filter( 'bst_customize_focus_map', function ( $map ) {
+	$map[] = array( 'selector' => '.bsi', 'type' => 'url', 'id' => admin_url( 'admin.php?page=' . BSL_PAGE . '#bsl-insights' ), 'label' => __( 'Site Insights settings', 'bigspy-ai-list-suite' ) );
+	if ( is_singular() ) {
+		$edit = get_edit_post_link( get_queried_object_id(), 'raw' );
+		if ( $edit ) {
+			$map[] = array( 'selector' => '.bsi', 'type' => 'url', 'id' => $edit . '#bsi-insights', 'label' => __( 'Insights data of this listing', 'bigspy-ai-list-suite' ) );
+		}
+	}
+	return $map;
+} );
